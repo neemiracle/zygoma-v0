@@ -9,6 +9,7 @@ import {
   SidebarInset,
   SidebarProvider,
   SidebarTrigger,
+  useSidebar,
 } from "@/components/ui/sidebar"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { VTKViewer, type VTKViewerRef } from "@/components/vtk-viewer"
@@ -16,15 +17,21 @@ import { Button } from "@/components/ui/button"
 import { X } from "lucide-react"
 import { ColorPopup } from "@/components/color-popup"
 import { ImplantLibrary } from "@/components/implant-library"
+import { ImplantViewer } from "@/components/implant-viewer"
 
-export default function Dashboard() {
+function DashboardContent() {
   const { user, isLoading } = useUser()
   const router = useRouter()
+  const { state } = useSidebar()
   const vtkViewerRef = useRef<VTKViewerRef>(null)
   const [fileName, setFileName] = useState<string>("")
   const [currentColor, setCurrentColor] = useState<string>("#4F46E5")
   const [showColorPopup, setShowColorPopup] = useState<boolean>(false)
   const [showLibrary, setShowLibrary] = useState<boolean>(false)
+  const [selectedImplant, setSelectedImplant] = useState<any>(null)
+  const [showImplantViewer, setShowImplantViewer] = useState<boolean>(false)
+
+  const sidebarCollapsed = state === "collapsed"
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -50,9 +57,9 @@ export default function Dashboard() {
     vtkViewerRef.current?.exportSTL()
   }
 
-  // Handle file load callback
+  // Handle file load callback (keeping for backwards compatibility)
   const handleFileLoad = (newFileName: string) => {
-    setFileName(newFileName)
+    handleFileLoadWithImplantClose(newFileName)
   }
 
   // Handle color change callback
@@ -68,6 +75,9 @@ export default function Dashboard() {
     setFileName("")
     // Clear the VTK viewer
     vtkViewerRef.current?.clearSTL()
+    // Close implant viewer when main STL closes
+    setShowImplantViewer(false)
+    setSelectedImplant(null)
   }
 
   // Handle library open
@@ -79,17 +89,31 @@ export default function Dashboard() {
   const handleImplantSelect = async (implant: any, manufacturer: string) => {
     try {
       console.log("Loading implant:", implant.name, "from", manufacturer)
-      const response = await fetch(implant.file)
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-      const arrayBuffer = await response.arrayBuffer()
-      const blob = new Blob([arrayBuffer], { type: "application/octet-stream" })
-      const file = new File([blob], `${implant.name}.stl`, { type: "application/octet-stream" })
       
-      await vtkViewerRef.current?.loadSTLFile(file)
+      // Set selected implant and show implant viewer
+      setSelectedImplant(implant)
+      setShowImplantViewer(true)
+      
+      // Close implant viewer when new STL is loaded to main viewer
+      // The implant viewer will automatically show the selected implant
     } catch (error) {
-      console.error("Failed to load implant STL:", error)
+      console.error("Failed to load implant:", error)
+    }
+  }
+
+  // Handle implant viewer close
+  const handleImplantViewerClose = () => {
+    setShowImplantViewer(false)
+    setSelectedImplant(null)
+  }
+
+  // Handle file load (also close implant viewer when new main STL is loaded)
+  const handleFileLoadWithImplantClose = (newFileName: string) => {
+    setFileName(newFileName)
+    if (newFileName) {
+      // Close implant viewer when new main STL is loaded
+      setShowImplantViewer(false)
+      setSelectedImplant(null)
     }
   }
 
@@ -106,7 +130,7 @@ export default function Dashboard() {
   }
 
   return (
-    <SidebarProvider>
+    <>
       <AppSidebar 
         onImportSTL={handleImportSTL}
         onExportSTL={handleExportSTL}
@@ -177,7 +201,23 @@ export default function Dashboard() {
           onOpenChange={setShowLibrary}
           onImplantSelect={handleImplantSelect}
         />
+        
+        {/* Implant Viewer - Bottom Left Corner */}
+        <ImplantViewer
+          implant={selectedImplant}
+          isVisible={showImplantViewer}
+          onClose={handleImplantViewerClose}
+          sidebarCollapsed={sidebarCollapsed}
+        />
       </SidebarInset>
+    </>
+  )
+}
+
+export default function Dashboard() {
+  return (
+    <SidebarProvider>
+      <DashboardContent />
     </SidebarProvider>
   )
 }

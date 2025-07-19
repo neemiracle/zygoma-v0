@@ -165,114 +165,146 @@ export function ImplantLibrary({ open, onOpenChange, onImplantSelect }: ImplantL
             <ScrollArea className="h-[calc(60vh-60px)]">
               <div className="p-2">
                 {implants.map((implant) => (
-                  <Button
+                  <Card
                     key={implant.id}
-                    variant={selectedImplant?.id === implant.id ? "default" : "ghost"}
-                    className="w-full justify-start mb-1 h-auto p-3"
+                    className={`cursor-pointer mb-2 transition-all hover:shadow-md ${
+                      selectedImplant?.id === implant.id 
+                        ? "ring-2 ring-primary bg-primary/5" 
+                        : "hover:bg-muted/30"
+                    }`}
                     onClick={() => handleImplantSelect(implant)}
                   >
-                    <div className="text-left">
-                      <div className="font-medium text-sm">{implant.name}</div>
-                      <div className="text-xs text-muted-foreground">
-                        ⌀{implant.diameter} × {implant.length}
+                    <CardContent className="p-3">
+                      <div className="flex gap-3">
+                        {/* STL Photo Placeholder */}
+                        <div className="w-12 h-12 bg-gradient-to-br from-slate-100 to-slate-200 rounded border flex items-center justify-center text-xs text-muted-foreground">
+                          STL
+                        </div>
+                        
+                        {/* Implant Info */}
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium text-sm truncate text-foreground">
+                            {implant.name}
+                          </div>
+                          <div className="text-xs text-muted-foreground mt-0.5">
+                            <div className="flex items-center gap-2">
+                              <span>⌀{implant.diameter}</span>
+                              <span>•</span>
+                              <span>{implant.length}</span>
+                            </div>
+                            <div className="mt-0.5">
+                              {implant.surface} • {implant.material}
+                            </div>
+                          </div>
+                          
+                          {/* Medical Grade Indicator */}
+                          <div className="flex items-center gap-1 mt-1">
+                            <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
+                            <span className="text-xs text-green-600 font-medium">Medical Grade</span>
+                          </div>
+                        </div>
                       </div>
-                      <div className="text-xs text-muted-foreground">
-                        {implant.surface}
-                      </div>
-                    </div>
-                  </Button>
+                    </CardContent>
+                  </Card>
                 ))}
               </div>
             </ScrollArea>
           </div>
 
           {/* Implant Info Panel */}
-          <div className="w-1/2 border rounded-lg">
+          <div className="w-1/2 border rounded-lg flex flex-col">
             <div className="p-3 border-b bg-muted/50">
               <h3 className="font-medium">Implant Details</h3>
             </div>
-            <ScrollArea className="h-[calc(60vh-60px)]">
-              <div className="p-4">
-                {selectedImplant ? (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-lg">{selectedImplant.name}</CardTitle>
-                      <CardDescription>{selectedImplant.description}</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      {/* Basic Info */}
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <div className="text-sm font-medium text-muted-foreground">Diameter</div>
-                          <div className="text-lg">{selectedImplant.diameter}</div>
-                        </div>
-                        <div>
-                          <div className="text-sm font-medium text-muted-foreground">Length</div>
-                          <div className="text-lg">{selectedImplant.length}</div>
-                        </div>
-                        <div>
-                          <div className="text-sm font-medium text-muted-foreground">Surface</div>
-                          <div>{selectedImplant.surface}</div>
-                        </div>
-                        <div>
-                          <div className="text-sm font-medium text-muted-foreground">Material</div>
-                          <div>{selectedImplant.material}</div>
-                        </div>
-                      </div>
-
-                      <Separator />
-
-                      {/* Features */}
-                      <div>
-                        <div className="text-sm font-medium text-muted-foreground mb-2">Features</div>
-                        <div className="flex flex-wrap gap-1">
-                          {selectedImplant.features.map((feature, index) => (
-                            <Badge key={index} variant="secondary" className="text-xs">
-                              {feature}
-                            </Badge>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Indications */}
-                      <div>
-                        <div className="text-sm font-medium text-muted-foreground mb-2">Indications</div>
-                        <div className="flex flex-wrap gap-1">
-                          {selectedImplant.indications.map((indication, index) => (
-                            <Badge key={index} variant="outline" className="text-xs">
-                              {indication}
-                            </Badge>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Available Sizes */}
-                      <div>
-                        <div className="text-sm font-medium text-muted-foreground mb-2">Available Sizes</div>
-                        <div className="grid grid-cols-2 gap-2 text-xs">
-                          <div>
-                            <div className="font-medium">Diameters:</div>
-                            <div className="text-muted-foreground">
-                              {selectedImplant.sizes.diameter.join(", ")}
-                            </div>
-                          </div>
-                          <div>
-                            <div className="font-medium">Lengths:</div>
-                            <div className="text-muted-foreground">
-                              {selectedImplant.sizes.length.join(", ")}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ) : (
-                  <div className="flex items-center justify-center h-32 text-muted-foreground">
-                    Select an implant to view details
+            <div className="flex-1 p-4 overflow-hidden">
+              {selectedImplant ? (
+                <div className="h-full flex flex-col">
+                  {/* Header */}
+                  <div className="mb-4">
+                    <h4 className="text-lg font-semibold">{selectedImplant.name}</h4>
+                    <p className="text-sm text-muted-foreground line-clamp-2">{selectedImplant.description}</p>
                   </div>
-                )}
-              </div>
-            </ScrollArea>
+
+                  {/* Basic Specifications */}
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div className="space-y-3">
+                      <div>
+                        <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Diameter</div>
+                        <div className="text-lg font-semibold">{selectedImplant.diameter}</div>
+                      </div>
+                      <div>
+                        <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Surface</div>
+                        <div className="text-sm">{selectedImplant.surface}</div>
+                      </div>
+                    </div>
+                    <div className="space-y-3">
+                      <div>
+                        <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Length</div>
+                        <div className="text-lg font-semibold">{selectedImplant.length}</div>
+                      </div>
+                      <div>
+                        <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Material</div>
+                        <div className="text-sm">{selectedImplant.material}</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <Separator className="my-4" />
+
+                  {/* Key Features */}
+                  <div className="mb-4">
+                    <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Key Features</div>
+                    <div className="flex flex-wrap gap-1">
+                      {selectedImplant.features.slice(0, 4).map((feature, index) => (
+                        <Badge key={index} variant="secondary" className="text-xs">
+                          {feature}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Primary Indications */}
+                  <div className="mb-4">
+                    <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Primary Indications</div>
+                    <div className="flex flex-wrap gap-1">
+                      {selectedImplant.indications.slice(0, 3).map((indication, index) => (
+                        <Badge key={index} variant="outline" className="text-xs">
+                          {indication}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Available Size Range */}
+                  <div className="mt-auto">
+                    <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Available Range</div>
+                    <div className="grid grid-cols-2 gap-3 text-xs">
+                      <div className="bg-muted/30 p-2 rounded">
+                        <div className="font-medium">Diameters</div>
+                        <div className="text-muted-foreground">
+                          {selectedImplant.sizes.diameter.slice(0, 3).join(", ")}
+                          {selectedImplant.sizes.diameter.length > 3 && "..."}
+                        </div>
+                      </div>
+                      <div className="bg-muted/30 p-2 rounded">
+                        <div className="font-medium">Lengths</div>
+                        <div className="text-muted-foreground">
+                          {selectedImplant.sizes.length.slice(0, 3).join(", ")}
+                          {selectedImplant.sizes.length.length > 3 && "..."}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center justify-center h-full text-muted-foreground">
+                  <div className="text-center">
+                    <div className="text-lg mb-2">📋</div>
+                    <div className="text-sm">Select an implant to view details</div>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
