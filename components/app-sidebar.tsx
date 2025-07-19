@@ -3,19 +3,18 @@
 import * as React from "react"
 import {
   AudioWaveform,
-  BookOpen,
-  Bot,
+  Upload,
+  Download,
   Command,
-  Frame,
+  FolderOpen,
   GalleryVerticalEnd,
-  Map,
-  PieChart,
+  Library,
+  FileText,
   Settings2,
-  SquareTerminal,
+  Palette,
 } from "lucide-react"
 
 import { NavMain } from "@/components/nav-main"
-import { NavProjects } from "@/components/nav-projects"
 import { NavUser } from "@/components/nav-user"
 import { TeamSwitcher } from "@/components/team-switcher"
 import {
@@ -26,132 +25,115 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar"
 
-// This is sample data.
+// STL Viewer specific navigation data
 const data = {
   user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
+    name: "STL User",
+    email: "user@example.com",
+    avatar: "/avatars/user.jpg",
   },
   teams: [
     {
-      name: "Acme Inc",
+      name: "STL Viewer",
       logo: GalleryVerticalEnd,
-      plan: "Enterprise",
+      plan: "Pro",
     },
     {
-      name: "Acme Corp.",
+      name: "3D Workshop",
       logo: AudioWaveform,
-      plan: "Startup",
+      plan: "Team",
     },
     {
-      name: "Evil Corp.",
+      name: "Design Studio",
       logo: Command,
-      plan: "Free",
+      plan: "Enterprise",
     },
   ],
   navMain: [
     {
-      title: "Playground",
-      url: "#",
-      icon: SquareTerminal,
+      title: "Import STL",
+      url: "#import",
+      icon: Upload,
       isActive: true,
       items: [
         {
-          title: "History",
-          url: "#",
+          title: "Upload File",
+          url: "#upload",
         },
         {
-          title: "Starred",
-          url: "#",
+          title: "Recent Files",
+          url: "#recent",
         },
         {
-          title: "Settings",
-          url: "#",
+          title: "File Browser",
+          url: "#browser",
         },
       ],
     },
     {
-      title: "Models",
-      url: "#",
-      icon: Bot,
+      title: "Library",
+      url: "#library",
+      icon: Library,
       items: [
         {
-          title: "Genesis",
-          url: "#",
+          title: "All Models",
+          url: "#all-models",
         },
         {
-          title: "Explorer",
-          url: "#",
+          title: "Favorites",
+          url: "#favorites",
         },
         {
-          title: "Quantum",
-          url: "#",
+          title: "Collections",
+          url: "#collections",
+        },
+        {
+          title: "Search",
+          url: "#search",
         },
       ],
     },
     {
-      title: "Documentation",
-      url: "#",
-      icon: BookOpen,
+      title: "Export STL",
+      url: "#export",
+      icon: Download,
       items: [
         {
-          title: "Introduction",
-          url: "#",
+          title: "Download Current",
+          url: "#download",
         },
         {
-          title: "Get Started",
-          url: "#",
+          title: "Export Settings",
+          url: "#export-settings",
         },
         {
-          title: "Tutorials",
-          url: "#",
-        },
-        {
-          title: "Changelog",
-          url: "#",
+          title: "Batch Export",
+          url: "#batch-export",
         },
       ],
     },
     {
-      title: "Settings",
-      url: "#",
+      title: "View Settings",
+      url: "#view",
       icon: Settings2,
       items: [
         {
-          title: "General",
-          url: "#",
+          title: "Display Options",
+          url: "#display",
         },
         {
-          title: "Team",
-          url: "#",
+          title: "Lighting",
+          url: "#lighting",
         },
         {
-          title: "Billing",
-          url: "#",
+          title: "Materials",
+          url: "#materials",
         },
         {
-          title: "Limits",
-          url: "#",
+          title: "Camera",
+          url: "#camera",
         },
       ],
-    },
-  ],
-  projects: [
-    {
-      name: "Design Engineering",
-      url: "#",
-      icon: Frame,
-    },
-    {
-      name: "Sales & Marketing",
-      url: "#",
-      icon: PieChart,
-    },
-    {
-      name: "Travel",
-      url: "#",
-      icon: Map,
     },
   ],
 }
@@ -164,7 +146,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />
-        <NavProjects projects={data.projects} />
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={data.user} />

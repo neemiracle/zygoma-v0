@@ -1,0 +1,41 @@
+{
+  "models": [
+    {
+      "id": "cube",
+      "name": "Simple Cube",
+      "description": "A basic cube model for testing",
+      "category": "Basic Shapes",
+      "file": "/models/cube.stl",
+      "thumbnail": "/models/thumbnails/cube.png",
+      "size": "1.2 MB",
+      "created": "2024-01-01"
+    },
+    {
+      "id": "sphere",
+      "name": "Simple Sphere",
+      "description": "A basic sphere model for testing",
+      "category": "Basic Shapes", 
+      "file": "/models/sphere.stl",
+      "thumbnail": "/models/thumbnails/sphere.png",
+      "size": "2.1 MB",
+      "created": "2024-01-02"
+    },
+    {
+      "id": "cylinder",
+      "name": "Simple Cylinder",
+      "description": "A basic cylinder model for testing",
+      "category": "Basic Shapes",
+      "file": "/models/cylinder.stl",
+      "thumbnail": "/models/thumbnails/cylinder.png", 
+      "size": "1.8 MB",
+      "created": "2024-01-03"
+    }
+  ],
+  "categories": [
+    "Basic Shapes",
+    "Mechanical Parts",
+    "Architectural",
+    "Medical",
+    "Artistic"
+  ]
+}
