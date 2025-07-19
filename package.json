@@ -60,7 +60,7 @@
     "tailwind-merge": "^2.5.5",
     "tailwindcss-animate": "^1.0.7",
     "vaul": "^0.9.6",
-    "vtk.js": "^34.5.0",
+    "vtk.js": "latest",
     "wslink": "^2.3.4",
     "zod": "^3.24.1"
   },

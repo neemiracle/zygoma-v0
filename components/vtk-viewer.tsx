@@ -51,9 +51,10 @@ export const VTKViewer = React.forwardRef<VTKViewerRef, VTKViewerProps>(({
 
   // Initialize VTK.js - exact pattern from reference
   useEffect(() => {
-    const initializeVTK = async () => {
-      if (typeof window === "undefined" || !vtkContainerRef.current) return
+    if (!vtkContainerRef.current) return
+    let mounted = true
 
+    const initializeVTK = async () => {
       try {
         setIsLoading(true)
         setError("")
@@ -79,6 +80,8 @@ export const VTKViewer = React.forwardRef<VTKViewerRef, VTKViewerProps>(({
         ])
         console.log("✓ VTK modules loaded")
 
+        if (!mounted || !vtkContainerRef.current) return
+
         // Store modules for later use
         vtkModulesRef.current = {
           vtkFullScreenRenderWindow,
@@ -103,7 +106,24 @@ export const VTKViewer = React.forwardRef<VTKViewerRef, VTKViewerProps>(({
 
         // 4️⃣ Configure renderer
         renderer.setBackground(0.1, 0.1, 0.1)
+        
+        // Check VTK renderer capabilities
+        console.log('VTK Renderer initialized with capabilities:', {
+          background: renderer.getBackground(),
+          numberOfActors: renderer.getActors().length,
+          lighting: renderer.getAutomaticLightCreation()
+        })
+        
+        // Set up better lighting for natural appearance
         renderer.setAutomaticLightCreation(true)
+        
+        // Get or create lights for better illumination
+        const lights = renderer.getLights()
+        if (lights.length === 0) {
+          console.log('VTK will create automatic lighting')
+        } else {
+          console.log('Existing lights found:', lights.length)
+        }
 
         // 5️⃣ Setup trackball camera interaction
         const interactor = fullScreenRenderWindow.getInteractor()
@@ -118,8 +138,13 @@ export const VTKViewer = React.forwardRef<VTKViewerRef, VTKViewerProps>(({
           currentActor: null
         }
 
+        // Initialize rendering
+        renderer.resetCamera()
+        renderWindow.render()
+
         console.log("✓ VTK initialization complete")
         setVtkReady(true)
+        setError("")
         setIsLoading(false)
       } catch (error) {
         console.error("VTK initialization failed:", error)
@@ -132,15 +157,21 @@ export const VTKViewer = React.forwardRef<VTKViewerRef, VTKViewerProps>(({
 
     // Cleanup on unmount
     return () => {
-      if (vtkObjectsRef.current.fullScreenRenderWindow) {
-        vtkObjectsRef.current.fullScreenRenderWindow.delete()
-        vtkObjectsRef.current = {
-          fullScreenRenderWindow: null,
-          renderer: null,
-          renderWindow: null,
-          currentActor: null
-        }
+      mounted = false
+      // Cleanup VTK objects
+      const { fullScreenRenderWindow, renderer } = vtkObjectsRef.current
+      if (renderer) {
+        // Remove all actors
+        const actors = renderer.getActors()
+        actors.forEach((actor: any) => {
+          renderer.removeActor(actor)
+        })
       }
+      if (fullScreenRenderWindow) {
+        fullScreenRenderWindow.delete?.()
+      }
+      // Clear references
+      vtkObjectsRef.current = {}
     }
   }, [])
 
@@ -161,6 +192,8 @@ export const VTKViewer = React.forwardRef<VTKViewerRef, VTKViewerProps>(({
 
       // Parse file
       const arrayBuffer = await file.arrayBuffer()
+      console.log(`File size: ${arrayBuffer.byteLength} bytes`)
+      
       const reader = vtkSTLReader.newInstance()
       reader.parseAsArrayBuffer(arrayBuffer)
       const polyData = reader.getOutputData()
@@ -169,12 +202,23 @@ export const VTKViewer = React.forwardRef<VTKViewerRef, VTKViewerProps>(({
       if (!polyData || polyData.getNumberOfPoints() === 0) {
         throw new Error("Invalid STL file: No geometry data found")
       }
-      console.log(`✓ STL parsed: ${polyData.getNumberOfPoints()} points, ${polyData.getNumberOfCells()} cells`)
-
-      // Remove any embedded color data that might override material colors
+      
+      // Check for embedded color data that might override our material colors
+      console.log('STL Data Analysis:', {
+        numberOfPoints: polyData.getNumberOfPoints(),
+        numberOfCells: polyData.getNumberOfCells(),
+        hasPointData: !!polyData.getPointData(),
+        hasCellData: !!polyData.getCellData(),
+        pointDataArrays: polyData.getPointData() ? polyData.getPointData().getNumberOfArrays() : 0,
+        cellDataArrays: polyData.getCellData() ? polyData.getCellData().getNumberOfArrays() : 0
+      })
+      
+      // Remove any color arrays that might override our material
       if (polyData.getPointData() && polyData.getPointData().getNumberOfArrays() > 0) {
         const pointData = polyData.getPointData()
         for (let i = pointData.getNumberOfArrays() - 1; i >= 0; i--) {
+          const arrayName = pointData.getArrayName(i)
+          console.log('Removing point data array:', arrayName)
           pointData.removeArray(i)
         }
       }
@@ -182,6 +226,8 @@ export const VTKViewer = React.forwardRef<VTKViewerRef, VTKViewerProps>(({
       if (polyData.getCellData() && polyData.getCellData().getNumberOfArrays() > 0) {
         const cellData = polyData.getCellData()
         for (let i = cellData.getNumberOfArrays() - 1; i >= 0; i--) {
+          const arrayName = cellData.getArrayName(i)
+          console.log('Removing cell data array:', arrayName)
           cellData.removeArray(i)
         }
       }
@@ -192,35 +238,49 @@ export const VTKViewer = React.forwardRef<VTKViewerRef, VTKViewerProps>(({
 
       const actor = vtkActor.newInstance()
       actor.setMapper(mapper)
-
-      // Set material properties with aggressive color override
+      
+      // Set material properties - FORCE override any VTK defaults
       const property = actor.getProperty()
       const rgb = hexToRgb(currentColor)
-
-      // Multiple color setting approaches
+      console.log('Initial STL load - setting color:', { currentColor, rgb })
+      console.log('Current color state:', currentColor)
+      console.log('Computed RGB values:', rgb)
+      
+      // AGGRESSIVE color setting - try multiple approaches
+      console.log('Setting color with multiple methods...')
+      
+      // Method 1: Standard VTK color setting with proper RGB values
+      console.log('Applying calculated RGB color:', rgb)
+      
       property.setColor(rgb.r, rgb.g, rgb.b)
       property.setDiffuseColor(rgb.r, rgb.g, rgb.b)
       property.setAmbientColor(rgb.r, rgb.g, rgb.b)
-      property.setSpecularColor(1, 1, 1)
-
-      // Lighting coefficients
-      property.setAmbient(0.4)
-      property.setDiffuse(0.8)
-      property.setSpecular(0.3)
-      property.setSpecularPower(20)
+      property.setSpecularColor(1, 1, 1) // White specular highlights
+      
+      console.log('Color applied:', rgb)
+      
+      // Method 2: Natural lighting ratios while preserving color accuracy
+      // Balance between color accuracy and realistic lighting
+      property.setAmbient(0.4)   // Moderate ambient for shadow detail
+      property.setDiffuse(0.8)   // Strong diffuse for color visibility
+      property.setSpecular(0.3)  // Natural specular highlights
+      property.setSpecularPower(20) // Softer specular
       property.setOpacity(1.0)
-
-      // Force rendering modes
+      
+      // Method 3: Force specific rendering modes
       property.setLighting(true)
       property.setInterpolationToPhong()
-
-      // Force color modes
+      
+      // Method 4: FORCE override any embedded colors in STL
       if (property.setColorModeToUniform) {
         property.setColorModeToUniform()
+        console.log('Set color mode to uniform')
       }
-
+      
+      // Method 5: Try disabling scalar visibility that might override colors
       if (mapper.setScalarVisibility) {
         mapper.setScalarVisibility(false)
+        console.log('Disabled scalar visibility on mapper')
       }
 
       property.modified()
@@ -228,16 +288,18 @@ export const VTKViewer = React.forwardRef<VTKViewerRef, VTKViewerProps>(({
 
       // Replace previous actor
       if (currentActor && renderer) {
+        console.log('Removing previous actor')
         renderer.removeActor(currentActor)
       }
 
+      console.log('Adding new actor to renderer')
       renderer.addActor(actor)
       renderer.resetCamera()
 
       vtkObjectsRef.current.currentActor = actor
       renderWindow.render()
 
-      console.log("✓ STL loaded successfully")
+      console.log("✓ STL loaded successfully with color:", currentColor)
       onFileLoad?.(file.name)
       setIsLoading(false)
     } catch (err) {
@@ -300,12 +362,32 @@ export const VTKViewer = React.forwardRef<VTKViewerRef, VTKViewerProps>(({
     }
   }
 
+  // Test function to load a sample STL file
+  const loadTestSTL = async () => {
+    try {
+      console.log("Loading test STL file...")
+      const response = await fetch("/test-cube.stl")
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      const arrayBuffer = await response.arrayBuffer()
+      const blob = new Blob([arrayBuffer], { type: "application/octet-stream" })
+      const file = new File([blob], "test-cube.stl", { type: "application/octet-stream" })
+      
+      await loadSTLFile(file)
+    } catch (error) {
+      console.error("Failed to load test STL:", error)
+      setError(`Failed to load test STL: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    }
+  }
+
   // Expose functions for parent component
   React.useImperativeHandle(ref, () => ({
     importSTL: () => fileInputRef.current?.click(),
     exportSTL,
     resetCamera,
-    loadSTLFile
+    loadSTLFile,
+    loadTestSTL
   }))
 
   return (
@@ -335,6 +417,18 @@ export const VTKViewer = React.forwardRef<VTKViewerRef, VTKViewerProps>(({
             className="absolute top-4 right-4 z-10 bg-background/80 backdrop-blur-sm"
           >
             <RotateCcw className="w-4 h-4" />
+          </Button>
+        )}
+
+        {/* Test STL Button - Top Left Corner (temporary for debugging) */}
+        {vtkReady && !isLoading && (
+          <Button
+            onClick={loadTestSTL}
+            size="sm"
+            variant="outline"
+            className="absolute top-4 left-4 z-10 bg-background/80 backdrop-blur-sm"
+          >
+            Load Test STL
           </Button>
         )}
 
@@ -391,4 +485,5 @@ export type VTKViewerRef = {
   exportSTL: () => void
   resetCamera: () => void
   loadSTLFile: (file: File) => Promise<void>
+  loadTestSTL: () => Promise<void>
 }
