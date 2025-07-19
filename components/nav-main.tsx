@@ -22,6 +22,7 @@ export function NavMain({
   items,
   onImportSTL,
   onExportSTL,
+  onLibraryOpen,
 }: {
   items: {
     title: string
@@ -36,12 +37,15 @@ export function NavMain({
   }[]
   onImportSTL?: () => void
   onExportSTL?: () => void
+  onLibraryOpen?: () => void
 }) {
   const handleItemClick = (item: typeof items[0]) => {
     if (item.action === "import") {
       onImportSTL?.()
     } else if (item.action === "export") {
       onExportSTL?.()
+    } else if (item.action === "library") {
+      onLibraryOpen?.()
     }
   }
 

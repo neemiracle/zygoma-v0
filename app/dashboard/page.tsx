@@ -4,14 +4,6 @@ import { useUser } from "@auth0/nextjs-auth0"
 import { useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { AppSidebar } from "@/components/app-sidebar"
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb"
 import { Separator } from "@/components/ui/separator"
 import {
   SidebarInset,
@@ -20,9 +12,10 @@ import {
 } from "@/components/ui/sidebar"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { VTKViewer, type VTKViewerRef } from "@/components/vtk-viewer"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Palette } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { X } from "lucide-react"
+import { ColorPopup } from "@/components/color-popup"
+import { ImplantLibrary } from "@/components/implant-library"
 
 export default function Dashboard() {
   const { user, isLoading } = useUser()
@@ -30,12 +23,22 @@ export default function Dashboard() {
   const vtkViewerRef = useRef<VTKViewerRef>(null)
   const [fileName, setFileName] = useState<string>("")
   const [currentColor, setCurrentColor] = useState<string>("#4F46E5")
+  const [showColorPopup, setShowColorPopup] = useState<boolean>(false)
+  const [showLibrary, setShowLibrary] = useState<boolean>(false)
 
   useEffect(() => {
     if (!isLoading && !user) {
       router.push("/auth/login")
     }
   }, [user, isLoading, router])
+
+  // Load saved color from localStorage on component mount
+  useEffect(() => {
+    const savedColor = localStorage.getItem('stl-viewer-color')
+    if (savedColor) {
+      setCurrentColor(savedColor)
+    }
+  }, [])
 
   // Handle import STL
   const handleImportSTL = () => {
@@ -55,6 +58,39 @@ export default function Dashboard() {
   // Handle color change callback
   const handleColorChange = (newColor: string) => {
     setCurrentColor(newColor)
+    // Save color to localStorage
+    localStorage.setItem('stl-viewer-color', newColor)
+  }
+
+  // Handle close STL
+  const handleCloseSTL = () => {
+    // Clear the current STL file
+    setFileName("")
+    // Clear the VTK viewer
+    vtkViewerRef.current?.clearSTL()
+  }
+
+  // Handle library open
+  const handleLibraryOpen = () => {
+    setShowLibrary(true)
+  }
+
+  // Handle implant selection from library
+  const handleImplantSelect = async (implant: any, manufacturer: string) => {
+    try {
+      console.log("Loading implant:", implant.name, "from", manufacturer)
+      const response = await fetch(implant.file)
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      const arrayBuffer = await response.arrayBuffer()
+      const blob = new Blob([arrayBuffer], { type: "application/octet-stream" })
+      const file = new File([blob], `${implant.name}.stl`, { type: "application/octet-stream" })
+      
+      await vtkViewerRef.current?.loadSTLFile(file)
+    } catch (error) {
+      console.error("Failed to load implant STL:", error)
+    }
   }
 
   if (isLoading) {
@@ -74,51 +110,40 @@ export default function Dashboard() {
       <AppSidebar 
         onImportSTL={handleImportSTL}
         onExportSTL={handleExportSTL}
+        onLibraryOpen={handleLibraryOpen}
       />
       <SidebarInset>
         <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
           <div className="flex items-center gap-2 px-4">
             <SidebarTrigger className="-ml-1" />
             <Separator orientation="vertical" className="mr-2 h-4" />
-            <Breadcrumb>
-              <BreadcrumbList>
-                <BreadcrumbItem className="hidden md:block">
-                  <BreadcrumbLink href="/">
-                    STL Viewer
-                  </BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator className="hidden md:block" />
-                <BreadcrumbItem>
-                  <BreadcrumbPage>3D Viewer</BreadcrumbPage>
-                </BreadcrumbItem>
-              </BreadcrumbList>
-            </Breadcrumb>
             
-            {/* File name and color selector next to breadcrumbs */}
+            {/* File controls when STL is loaded */}
             {fileName && (
-              <>
-                <Separator orientation="vertical" className="mx-2 h-4" />
-                <div className="flex items-center gap-3">
-                  <div className="text-sm text-muted-foreground">
-                    {fileName}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Label htmlFor="color-picker" className="sr-only">
-                      Model Color
-                    </Label>
-                    <div className="flex items-center gap-1">
-                      <Palette className="w-4 h-4 text-muted-foreground" />
-                      <Input
-                        id="color-picker"
-                        type="color"
-                        value={currentColor}
-                        onChange={(e) => handleColorChange(e.target.value)}
-                        className="w-8 h-8 p-1 border rounded cursor-pointer"
-                      />
-                    </div>
-                  </div>
+              <div className="flex items-center gap-3">
+                <Button
+                  onClick={handleCloseSTL}
+                  size="sm"
+                  variant="ghost"
+                  className="h-8 w-8 p-0"
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+                <div className="text-sm text-muted-foreground">
+                  {fileName}
                 </div>
-              </>
+                <Button
+                  onClick={() => setShowColorPopup(true)}
+                  size="sm"
+                  variant="ghost"
+                  className="h-8 w-8 p-0"
+                >
+                  <div 
+                    className="w-4 h-4 rounded border"
+                    style={{ backgroundColor: currentColor }}
+                  />
+                </Button>
+              </div>
             )}
           </div>
           <div className="ml-auto px-4">
@@ -137,6 +162,21 @@ export default function Dashboard() {
             fileName={fileName}
           />
         </div>
+        
+        {/* Color Popup */}
+        <ColorPopup 
+          open={showColorPopup}
+          onOpenChange={setShowColorPopup}
+          currentColor={currentColor}
+          onColorChange={handleColorChange}
+        />
+        
+        {/* Implant Library Popup */}
+        <ImplantLibrary
+          open={showLibrary}
+          onOpenChange={setShowLibrary}
+          onImplantSelect={handleImplantSelect}
+        />
       </SidebarInset>
     </SidebarProvider>
   )

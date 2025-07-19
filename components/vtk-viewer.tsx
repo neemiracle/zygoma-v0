@@ -175,6 +175,23 @@ export const VTKViewer = React.forwardRef<VTKViewerRef, VTKViewerProps>(({
     }
   }, [])
 
+  // Watch for color changes from parent
+  useEffect(() => {
+    if (vtkObjectsRef.current.currentActor && vtkReady && currentColor) {
+      console.log('Color changed from parent:', currentColor)
+      const property = vtkObjectsRef.current.currentActor.getProperty()
+      const rgb = hexToRgb(currentColor)
+
+      property.setColor(rgb.r, rgb.g, rgb.b)
+      property.setDiffuseColor(rgb.r, rgb.g, rgb.b)
+      property.setAmbientColor(rgb.r, rgb.g, rgb.b)
+
+      property.modified()
+      vtkObjectsRef.current.renderWindow?.render()
+      console.log('VTK color updated to:', currentColor)
+    }
+  }, [currentColor, vtkReady])
+
   // Load STL file - exact pattern from reference
   const loadSTLFile = async (file: File) => {
     if (!vtkReady || !vtkModulesRef.current || !vtkObjectsRef.current.renderer || !vtkObjectsRef.current.renderWindow) {
@@ -381,13 +398,25 @@ export const VTKViewer = React.forwardRef<VTKViewerRef, VTKViewerProps>(({
     }
   }
 
+  // Clear current STL model
+  const clearSTL = () => {
+    if (vtkObjectsRef.current.currentActor && vtkObjectsRef.current.renderer && vtkObjectsRef.current.renderWindow) {
+      console.log('Clearing current STL model')
+      vtkObjectsRef.current.renderer.removeActor(vtkObjectsRef.current.currentActor)
+      vtkObjectsRef.current.currentActor = null
+      vtkObjectsRef.current.renderWindow.render()
+      onFileLoad?.("")
+    }
+  }
+
   // Expose functions for parent component
   React.useImperativeHandle(ref, () => ({
     importSTL: () => fileInputRef.current?.click(),
     exportSTL,
     resetCamera,
     loadSTLFile,
-    loadTestSTL
+    loadTestSTL,
+    clearSTL
   }))
 
   return (
@@ -486,4 +515,5 @@ export type VTKViewerRef = {
   resetCamera: () => void
   loadSTLFile: (file: File) => Promise<void>
   loadTestSTL: () => Promise<void>
+  clearSTL: () => void
 }

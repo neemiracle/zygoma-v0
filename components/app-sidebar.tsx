@@ -16,7 +16,6 @@ import {
 
 import { NavMain } from "@/components/nav-main"
 import { NavUser } from "@/components/nav-user"
-import { TeamSwitcher } from "@/components/team-switcher"
 import {
   Sidebar,
   SidebarContent,
@@ -32,23 +31,11 @@ const data = {
     email: "user@example.com",
     avatar: "/avatars/user.jpg",
   },
-  teams: [
-    {
-      name: "STL Viewer",
-      logo: GalleryVerticalEnd,
-      plan: "Pro",
-    },
-    {
-      name: "3D Workshop",
-      logo: AudioWaveform,
-      plan: "Team",
-    },
-    {
-      name: "Design Studio",
-      logo: Command,
-      plan: "Enterprise",
-    },
-  ],
+  company: {
+    name: "Dental Innovations",
+    logo: GalleryVerticalEnd,
+    tagline: "Advanced STL Viewer",
+  },
   navMain: [
     {
       title: "Import STL",
@@ -61,24 +48,7 @@ const data = {
       title: "Library",
       url: "#library",
       icon: Library,
-      items: [
-        {
-          title: "All Models",
-          url: "#all-models",
-        },
-        {
-          title: "Favorites",
-          url: "#favorites",
-        },
-        {
-          title: "Collections",
-          url: "#collections",
-        },
-        {
-          title: "Search",
-          url: "#search",
-        },
-      ],
+      action: "library"
     },
     {
       title: "Export STL",
@@ -115,19 +85,35 @@ const data = {
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
   onImportSTL?: () => void
   onExportSTL?: () => void
+  onLibraryOpen?: () => void
 }
 
-export function AppSidebar({ onImportSTL, onExportSTL, ...props }: AppSidebarProps) {
+function CompanyLogo({ company }: { company: typeof data.company }) {
+  return (
+    <div className="flex items-center gap-2 px-4 py-2">
+      <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
+        <company.logo className="size-4" />
+      </div>
+      <div className="grid flex-1 text-left text-sm leading-tight">
+        <span className="truncate font-semibold">{company.name}</span>
+        <span className="truncate text-xs text-muted-foreground">{company.tagline}</span>
+      </div>
+    </div>
+  )
+}
+
+export function AppSidebar({ onImportSTL, onExportSTL, onLibraryOpen, ...props }: AppSidebarProps) {
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
-        <TeamSwitcher teams={data.teams} />
+        <CompanyLogo company={data.company} />
       </SidebarHeader>
       <SidebarContent>
         <NavMain 
           items={data.navMain} 
           onImportSTL={onImportSTL}
           onExportSTL={onExportSTL}
+          onLibraryOpen={onLibraryOpen}
         />
       </SidebarContent>
       <SidebarFooter>
