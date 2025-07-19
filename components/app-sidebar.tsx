@@ -55,20 +55,7 @@ const data = {
       url: "#import",
       icon: Upload,
       isActive: true,
-      items: [
-        {
-          title: "Upload File",
-          url: "#upload",
-        },
-        {
-          title: "Recent Files",
-          url: "#recent",
-        },
-        {
-          title: "File Browser",
-          url: "#browser",
-        },
-      ],
+      action: "import"
     },
     {
       title: "Library",
@@ -97,20 +84,7 @@ const data = {
       title: "Export STL",
       url: "#export",
       icon: Download,
-      items: [
-        {
-          title: "Download Current",
-          url: "#download",
-        },
-        {
-          title: "Export Settings",
-          url: "#export-settings",
-        },
-        {
-          title: "Batch Export",
-          url: "#batch-export",
-        },
-      ],
+      action: "export"
     },
     {
       title: "View Settings",
@@ -138,14 +112,23 @@ const data = {
   ],
 }
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
+  onImportSTL?: () => void
+  onExportSTL?: () => void
+}
+
+export function AppSidebar({ onImportSTL, onExportSTL, ...props }: AppSidebarProps) {
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
         <TeamSwitcher teams={data.teams} />
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
+        <NavMain 
+          items={data.navMain} 
+          onImportSTL={onImportSTL}
+          onExportSTL={onExportSTL}
+        />
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={data.user} />

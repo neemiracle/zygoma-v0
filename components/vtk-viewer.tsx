@@ -1,15 +1,18 @@
 "use client"
 
 import React, { useRef, useEffect, useState } from "react"
-import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Upload, Download, RotateCcw, Palette } from "lucide-react"
+import { RotateCcw, Palette } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 interface VTKViewerProps {
   className?: string
+  onFileLoad?: (fileName: string) => void
+  onColorChange?: (color: string) => void
+  currentColor?: string
+  fileName?: string
 }
 
 // Utility function to convert hex to RGB (0-1 range for VTK)
@@ -21,76 +24,106 @@ const hexToRgb = (hex: string) => {
         g: parseInt(result[2], 16) / 255,
         b: parseInt(result[3], 16) / 255,
       }
-    : { r: 0.8, g: 0.8, b: 0.8 }
+    : { r: 0.8, g: 0.8, b: 0.9 }
 }
 
-export function VTKViewer({ className }: VTKViewerProps) {
+export const VTKViewer = React.forwardRef<VTKViewerRef, VTKViewerProps>(({ 
+  className, 
+  onFileLoad, 
+  onColorChange, 
+  currentColor = "#4F46E5",
+  fileName = ""
+}, ref) => {
   const vtkContainerRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const [isVTKLoaded, setIsVTKLoaded] = useState(false)
-  const [currentFile, setCurrentFile] = useState<File | null>(null)
-  const [currentColor, setCurrentColor] = useState("#4F46E5")
+  const [vtkReady, setVtkReady] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string>("")
 
-  // VTK objects refs
-  const fullScreenRenderWindowRef = useRef<any>(null)
-  const rendererRef = useRef<any>(null)
-  const renderWindowRef = useRef<any>(null)
-  const currentActorRef = useRef<any>(null)
+  // VTK objects refs - using same pattern as reference
+  const vtkModulesRef = useRef<any>({})
+  const vtkObjectsRef = useRef<any>({
+    fullScreenRenderWindow: null,
+    renderer: null,
+    renderWindow: null,
+    currentActor: null
+  })
 
-  // Initialize VTK.js
+  // Initialize VTK.js - exact pattern from reference
   useEffect(() => {
     const initializeVTK = async () => {
       if (typeof window === "undefined" || !vtkContainerRef.current) return
 
       try {
         setIsLoading(true)
+        setError("")
+        console.log("Starting VTK initialization...")
 
-        // Load VTK.js geometry profile first (critical!)
+        // 1️⃣ Load geometry profile FIRST (critical!)
         await import("vtk.js/Sources/Rendering/Profiles/Geometry")
+        console.log("✓ Geometry profile loaded")
 
-        // Load required VTK modules
+        // 2️⃣ Load required VTK modules
         const [
           { default: vtkFullScreenRenderWindow },
           { default: vtkInteractorStyleTrackballCamera },
+          { default: vtkSTLReader },
+          { default: vtkActor },
+          { default: vtkMapper },
         ] = await Promise.all([
           import("vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow"),
           import("vtk.js/Sources/Interaction/Style/InteractorStyleTrackballCamera"),
+          import("vtk.js/Sources/IO/Geometry/STLReader"),
+          import("vtk.js/Sources/Rendering/Core/Actor"),
+          import("vtk.js/Sources/Rendering/Core/Mapper"),
         ])
+        console.log("✓ VTK modules loaded")
 
-        // Create render window
+        // Store modules for later use
+        vtkModulesRef.current = {
+          vtkFullScreenRenderWindow,
+          vtkInteractorStyleTrackballCamera,
+          vtkSTLReader,
+          vtkActor,
+          vtkMapper,
+        }
+
+        // 3️⃣ Create render window
         const fullScreenRenderWindow = vtkFullScreenRenderWindow.newInstance({
           rootContainer: vtkContainerRef.current,
-          containerStyle: { 
-            height: "100%", 
-            width: "100%", 
+          containerStyle: {
+            height: "100%",
+            width: "100%",
             position: "relative",
-            overflow: "hidden"
-          }
+          },
         })
 
-        // Setup renderer and interaction
         const renderer = fullScreenRenderWindow.getRenderer()
         const renderWindow = fullScreenRenderWindow.getRenderWindow()
-        
-        // Set dark background for better contrast
+
+        // 4️⃣ Configure renderer
         renderer.setBackground(0.1, 0.1, 0.1)
         renderer.setAutomaticLightCreation(true)
 
-        // Setup trackball camera interaction
+        // 5️⃣ Setup trackball camera interaction
         const interactor = fullScreenRenderWindow.getInteractor()
         const interactorStyle = vtkInteractorStyleTrackballCamera.newInstance()
         interactor.setInteractorStyle(interactorStyle)
 
-        // Store refs
-        fullScreenRenderWindowRef.current = fullScreenRenderWindow
-        rendererRef.current = renderer
-        renderWindowRef.current = renderWindow
+        // Store VTK objects
+        vtkObjectsRef.current = {
+          fullScreenRenderWindow,
+          renderer,
+          renderWindow,
+          currentActor: null
+        }
 
-        setIsVTKLoaded(true)
+        console.log("✓ VTK initialization complete")
+        setVtkReady(true)
         setIsLoading(false)
       } catch (error) {
-        console.error("Failed to initialize VTK.js:", error)
+        console.error("VTK initialization failed:", error)
+        setError(`VTK initialization failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
         setIsLoading(false)
       }
     }
@@ -99,243 +132,263 @@ export function VTKViewer({ className }: VTKViewerProps) {
 
     // Cleanup on unmount
     return () => {
-      if (fullScreenRenderWindowRef.current) {
-        fullScreenRenderWindowRef.current.delete()
-        fullScreenRenderWindowRef.current = null
+      if (vtkObjectsRef.current.fullScreenRenderWindow) {
+        vtkObjectsRef.current.fullScreenRenderWindow.delete()
+        vtkObjectsRef.current = {
+          fullScreenRenderWindow: null,
+          renderer: null,
+          renderWindow: null,
+          currentActor: null
+        }
       }
     }
   }, [])
 
-  // Load STL file
+  // Load STL file - exact pattern from reference
   const loadSTLFile = async (file: File) => {
-    if (!isVTKLoaded || !rendererRef.current) return
+    if (!vtkReady || !vtkModulesRef.current || !vtkObjectsRef.current.renderer || !vtkObjectsRef.current.renderWindow) {
+      setError("VTK not ready yet, please wait a moment and try again.")
+      return
+    }
 
     try {
       setIsLoading(true)
+      setError("")
+      console.log(`Loading STL file: ${file.name}`)
 
-      // Load VTK STL reader and related modules
-      const [
-        { default: vtkSTLReader },
-        { default: vtkActor },
-        { default: vtkMapper },
-      ] = await Promise.all([
-        import("vtk.js/Sources/IO/Geometry/STLReader"),
-        import("vtk.js/Sources/Rendering/Core/Actor"),
-        import("vtk.js/Sources/Rendering/Core/Mapper"),
-      ])
+      const { vtkSTLReader, vtkActor, vtkMapper } = vtkModulesRef.current
+      const { renderer, renderWindow, currentActor } = vtkObjectsRef.current
 
-      // Read file
+      // Parse file
       const arrayBuffer = await file.arrayBuffer()
       const reader = vtkSTLReader.newInstance()
       reader.parseAsArrayBuffer(arrayBuffer)
       const polyData = reader.getOutputData()
 
-      // Remove previous actor if exists
-      if (currentActorRef.current) {
-        rendererRef.current.removeActor(currentActorRef.current)
+      // Check if polyData is valid
+      if (!polyData || polyData.getNumberOfPoints() === 0) {
+        throw new Error("Invalid STL file: No geometry data found")
+      }
+      console.log(`✓ STL parsed: ${polyData.getNumberOfPoints()} points, ${polyData.getNumberOfCells()} cells`)
+
+      // Remove any embedded color data that might override material colors
+      if (polyData.getPointData() && polyData.getPointData().getNumberOfArrays() > 0) {
+        const pointData = polyData.getPointData()
+        for (let i = pointData.getNumberOfArrays() - 1; i >= 0; i--) {
+          pointData.removeArray(i)
+        }
+      }
+      
+      if (polyData.getCellData() && polyData.getCellData().getNumberOfArrays() > 0) {
+        const cellData = polyData.getCellData()
+        for (let i = cellData.getNumberOfArrays() - 1; i >= 0; i--) {
+          cellData.removeArray(i)
+        }
       }
 
-      // Create visualization pipeline
+      // Build pipeline
       const mapper = vtkMapper.newInstance()
       mapper.setInputData(polyData)
-      
+
       const actor = vtkActor.newInstance()
       actor.setMapper(mapper)
 
-      // Set material properties
+      // Set material properties with aggressive color override
       const property = actor.getProperty()
       const rgb = hexToRgb(currentColor)
-      
+
+      // Multiple color setting approaches
       property.setColor(rgb.r, rgb.g, rgb.b)
       property.setDiffuseColor(rgb.r, rgb.g, rgb.b)
       property.setAmbientColor(rgb.r, rgb.g, rgb.b)
       property.setSpecularColor(1, 1, 1)
-      
-      // Lighting coefficients for better appearance
+
+      // Lighting coefficients
       property.setAmbient(0.4)
       property.setDiffuse(0.8)
       property.setSpecular(0.3)
       property.setSpecularPower(20)
+      property.setOpacity(1.0)
 
-      // Add to renderer
-      rendererRef.current.addActor(actor)
-      currentActorRef.current = actor
+      // Force rendering modes
+      property.setLighting(true)
+      property.setInterpolationToPhong()
 
-      // Reset camera to fit the model
-      rendererRef.current.resetCamera()
-      renderWindowRef.current.render()
+      // Force color modes
+      if (property.setColorModeToUniform) {
+        property.setColorModeToUniform()
+      }
 
-      setCurrentFile(file)
+      if (mapper.setScalarVisibility) {
+        mapper.setScalarVisibility(false)
+      }
+
+      property.modified()
+      actor.modified()
+
+      // Replace previous actor
+      if (currentActor && renderer) {
+        renderer.removeActor(currentActor)
+      }
+
+      renderer.addActor(actor)
+      renderer.resetCamera()
+
+      vtkObjectsRef.current.currentActor = actor
+      renderWindow.render()
+
+      console.log("✓ STL loaded successfully")
+      onFileLoad?.(file.name)
       setIsLoading(false)
-    } catch (error) {
-      console.error("Failed to load STL file:", error)
+    } catch (err) {
+      console.error("STL loading error:", err)
+      const errorMessage = `Failed to load STL file: ${err instanceof Error ? err.message : 'Unknown error'}`
+      setError(errorMessage)
       setIsLoading(false)
+    } finally {
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ""
+      }
     }
   }
 
   // Handle file selection
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
-    if (file && file.name.toLowerCase().endsWith('.stl')) {
-      loadSTLFile(file)
+    if (!file || !file.name.toLowerCase().endsWith('.stl')) {
+      setError("Please select a valid .stl file")
+      return
     }
+    await loadSTLFile(file)
   }
 
   // Handle color change
   const handleColorChange = (color: string) => {
-    setCurrentColor(color)
-    
-    if (currentActorRef.current && isVTKLoaded) {
-      const property = currentActorRef.current.getProperty()
+    if (vtkObjectsRef.current.currentActor && vtkReady) {
+      const property = vtkObjectsRef.current.currentActor.getProperty()
       const rgb = hexToRgb(color)
-      
+
       property.setColor(rgb.r, rgb.g, rgb.b)
       property.setDiffuseColor(rgb.r, rgb.g, rgb.b)
       property.setAmbientColor(rgb.r, rgb.g, rgb.b)
-      
-      renderWindowRef.current?.render()
+
+      property.modified()
+      vtkObjectsRef.current.renderWindow?.render()
     }
+    onColorChange?.(color)
   }
 
   // Reset camera view
   const resetCamera = () => {
-    if (rendererRef.current && renderWindowRef.current) {
-      rendererRef.current.resetCamera()
-      renderWindowRef.current.render()
+    if (vtkObjectsRef.current.renderer && vtkObjectsRef.current.renderWindow) {
+      vtkObjectsRef.current.renderer.resetCamera()
+      vtkObjectsRef.current.renderWindow.render()
     }
   }
 
   // Export current STL
   const exportSTL = async () => {
-    if (!currentActorRef.current || !currentFile) return
+    if (!vtkObjectsRef.current.currentActor || !fileName) return
 
     try {
-      // For now, we'll re-download the original file
-      // In a full implementation, you'd extract the polyData and convert to STL format
-      const url = URL.createObjectURL(currentFile)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `exported_${currentFile.name}`
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
-      URL.revokeObjectURL(url)
+      // Simple re-download approach for now
+      // In full implementation, you'd extract polyData and convert to STL
+      alert("Export functionality would be implemented here")
     } catch (error) {
       console.error("Failed to export STL:", error)
+      setError("Failed to export STL file")
     }
   }
 
+  // Expose functions for parent component
+  React.useImperativeHandle(ref, () => ({
+    importSTL: () => fileInputRef.current?.click(),
+    exportSTL,
+    resetCamera,
+    loadSTLFile
+  }))
+
   return (
-    <div className={cn("flex flex-col h-full", className)}>
-      {/* Controls Header */}
-      <div className="flex items-center gap-4 p-4 border-b bg-background">
-        <div className="flex items-center gap-2">
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".stl"
-            onChange={handleFileSelect}
-            className="hidden"
-          />
-          <Button
-            onClick={() => fileInputRef.current?.click()}
-            disabled={isLoading}
-            size="sm"
-          >
-            <Upload className="w-4 h-4 mr-2" />
-            Import STL
-          </Button>
-          
-          <Button
-            onClick={exportSTL}
-            disabled={!currentFile || isLoading}
-            variant="outline"
-            size="sm"
-          >
-            <Download className="w-4 h-4 mr-2" />
-            Export STL
-          </Button>
-          
-          <Button
-            onClick={resetCamera}
-            disabled={!currentFile || isLoading}
-            variant="outline"
-            size="sm"
-          >
-            <RotateCcw className="w-4 h-4 mr-2" />
-            Reset View
-          </Button>
-        </div>
+    <div className={cn("flex flex-col h-full relative", className)}>
+      {/* Hidden file input */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".stl"
+        onChange={handleFileChange}
+        className="hidden"
+      />
 
-        {/* Color Picker */}
-        <div className="flex items-center gap-2 ml-auto">
-          <Label htmlFor="color-picker" className="text-sm">Color:</Label>
-          <div className="flex items-center gap-2">
-            <Palette className="w-4 h-4" />
-            <Input
-              id="color-picker"
-              type="color"
-              value={currentColor}
-              onChange={(e) => handleColorChange(e.target.value)}
-              className="w-12 h-8 p-1 border rounded cursor-pointer"
-              disabled={!currentFile || isLoading}
-            />
-          </div>
-        </div>
-
-        {/* File Info */}
-        {currentFile && (
-          <div className="text-sm text-muted-foreground">
-            {currentFile.name} ({(currentFile.size / 1024 / 1024).toFixed(2)} MB)
-          </div>
-        )}
-      </div>
-
-      {/* 3D Viewer */}
+      {/* 3D Viewer Container */}
       <div className="flex-1 relative">
         <div
           ref={vtkContainerRef}
           className="absolute inset-0 bg-slate-900"
         />
-        
+
+        {/* Reset Camera Button - Top Right Corner */}
+        {vtkObjectsRef.current.currentActor && (
+          <Button
+            onClick={resetCamera}
+            size="sm"
+            variant="outline"
+            className="absolute top-4 right-4 z-10 bg-background/80 backdrop-blur-sm"
+          >
+            <RotateCcw className="w-4 h-4" />
+          </Button>
+        )}
+
         {/* Loading overlay */}
         {isLoading && (
-          <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-20">
             <div className="bg-background p-4 rounded-lg shadow-lg">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
-              <p className="text-sm">Loading VTK.js...</p>
+              <p className="text-sm">
+                {!vtkReady ? "Initializing VTK.js..." : "Loading STL file..."}
+              </p>
             </div>
           </div>
         )}
 
-        {/* Empty state */}
-        {!currentFile && !isLoading && isVTKLoaded && (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <Card className="p-8 text-center">
-              <Upload className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-              <h3 className="text-lg font-semibold mb-2">No STL File Loaded</h3>
-              <p className="text-muted-foreground mb-4">
-                Click "Import STL" to load a 3D model
-              </p>
-              <Button onClick={() => fileInputRef.current?.click()}>
-                <Upload className="w-4 h-4 mr-2" />
-                Import STL File
+        {/* Error overlay */}
+        {error && (
+          <div className="absolute top-4 left-4 right-20 z-10">
+            <div className="bg-destructive/90 text-destructive-foreground p-3 rounded-lg shadow-lg">
+              <div className="font-medium text-sm">Error:</div>
+              <div className="text-xs mt-1">{error}</div>
+              <Button
+                onClick={() => setError("")}
+                size="sm"
+                variant="outline"
+                className="mt-2 text-xs"
+              >
+                Dismiss
               </Button>
-            </Card>
+            </div>
           </div>
         )}
 
-        {/* VTK not loaded state */}
-        {!isVTKLoaded && !isLoading && (
+        {/* VTK not ready state */}
+        {!vtkReady && !isLoading && (
           <div className="absolute inset-0 flex items-center justify-center">
-            <Card className="p-8 text-center">
+            <div className="bg-background p-8 rounded-lg shadow-lg text-center">
               <p className="text-muted-foreground">
-                Failed to initialize 3D viewer
+                VTK.js failed to initialize
               </p>
-            </Card>
+            </div>
           </div>
         )}
       </div>
     </div>
   )
+})
+
+VTKViewer.displayName = "VTKViewer"
+
+// Export the ref type for parent components
+export type VTKViewerRef = {
+  importSTL: () => void
+  exportSTL: () => void
+  resetCamera: () => void
+  loadSTLFile: (file: File) => Promise<void>
 }
