@@ -60,24 +60,7 @@ const data = {
       title: "View Settings",
       url: "#view",
       icon: Settings2,
-      items: [
-        {
-          title: "Display Options",
-          url: "#display",
-        },
-        {
-          title: "Lighting",
-          url: "#lighting",
-        },
-        {
-          title: "Materials",
-          url: "#materials",
-        },
-        {
-          title: "Camera",
-          url: "#camera",
-        },
-      ],
+      action: "view-settings"
     },
   ],
 }
@@ -86,6 +69,7 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
   onImportSTL?: () => void
   onExportSTL?: () => void
   onLibraryOpen?: () => void
+  onViewSettingsOpen?: () => void
 }
 
 function CompanyLogo({ company }: { company: typeof data.company }) {
@@ -102,7 +86,7 @@ function CompanyLogo({ company }: { company: typeof data.company }) {
   )
 }
 
-export function AppSidebar({ onImportSTL, onExportSTL, onLibraryOpen, ...props }: AppSidebarProps) {
+export function AppSidebar({ onImportSTL, onExportSTL, onLibraryOpen, onViewSettingsOpen, ...props }: AppSidebarProps) {
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
@@ -114,6 +98,7 @@ export function AppSidebar({ onImportSTL, onExportSTL, onLibraryOpen, ...props }
           onImportSTL={onImportSTL}
           onExportSTL={onExportSTL}
           onLibraryOpen={onLibraryOpen}
+          onViewSettingsOpen={onViewSettingsOpen}
         />
       </SidebarContent>
       <SidebarFooter>

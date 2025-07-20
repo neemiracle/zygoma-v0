@@ -49,9 +49,13 @@ export function ImplantViewer({ implant, isVisible, onClose, className, sidebarC
     currentActor: null
   })
 
-  // Initialize VTK.js when component becomes visible
+  // Initialize VTK.js when component becomes visible or collapse state changes
   useEffect(() => {
     if (!isVisible || !vtkContainerRef.current) return
+    
+    // If we're collapsed, don't initialize VTK
+    if (isCollapsed) return
+    
     let mounted = true
 
     const initializeVTK = async () => {
@@ -59,6 +63,19 @@ export function ImplantViewer({ implant, isVisible, onClose, className, sidebarC
         setIsLoading(true)
         setError("")
         console.log("Starting implant VTK initialization...")
+
+        // Cleanup any existing VTK instance first
+        const { fullScreenRenderWindow: existingRenderWindow, renderer: existingRenderer } = vtkObjectsRef.current
+        if (existingRenderer) {
+          const actors = existingRenderer.getActors()
+          actors.forEach((actor: any) => {
+            existingRenderer.removeActor(actor)
+          })
+        }
+        if (existingRenderWindow) {
+          existingRenderWindow.delete?.()
+        }
+        vtkObjectsRef.current = {}
 
         // Load geometry profile FIRST
         await import("vtk.js/Sources/Rendering/Profiles/Geometry")
@@ -104,7 +121,36 @@ export function ImplantViewer({ implant, isVisible, onClose, className, sidebarC
 
         // Configure renderer with darker background for implant viewer
         renderer.setBackground(0.05, 0.05, 0.1)
-        renderer.setAutomaticLightCreation(true)
+        renderer.setAutomaticLightCreation(false)
+        
+        // Add custom lighting for better implant visualization
+        const { default: vtkLight } = await import("vtk.js/Sources/Rendering/Core/Light")
+        
+        // Key light (main directional light)
+        const keyLight = vtkLight.newInstance()
+        keyLight.setColor(1.0, 1.0, 1.0)
+        keyLight.setIntensity(0.8)
+        keyLight.setLightTypeToHeadLight()
+        keyLight.setPositional(false)
+        renderer.addLight(keyLight)
+        
+        // Fill light (softer secondary light)
+        const fillLight = vtkLight.newInstance()
+        fillLight.setColor(0.9, 0.9, 1.0)
+        fillLight.setIntensity(0.4)
+        fillLight.setPosition(-1, 1, 0.5)
+        fillLight.setFocalPoint(0, 0, 0)
+        fillLight.setPositional(true)
+        renderer.addLight(fillLight)
+        
+        // Rim light (back light for edge definition)
+        const rimLight = vtkLight.newInstance()
+        rimLight.setColor(1.0, 1.0, 0.9)
+        rimLight.setIntensity(0.3)
+        rimLight.setPosition(1, -1, -1)
+        rimLight.setFocalPoint(0, 0, 0)
+        rimLight.setPositional(true)
+        renderer.addLight(rimLight)
 
         // Setup trackball camera interaction
         const interactor = fullScreenRenderWindow.getInteractor()
@@ -159,7 +205,7 @@ export function ImplantViewer({ implant, isVisible, onClose, className, sidebarC
       vtkObjectsRef.current = {}
       setVtkReady(false)
     }
-  }, [isVisible])
+  }, [isVisible, isCollapsed])
 
   // Load implant STL when implant changes
   useEffect(() => {
@@ -196,21 +242,23 @@ export function ImplantViewer({ implant, isVisible, onClose, className, sidebarC
         const actor = vtkActor.newInstance()
         actor.setMapper(mapper)
         
-        // Set implant-specific material properties (golden metallic)
+        // Set implant-specific material properties (premium titanium)
         const property = actor.getProperty()
-        const rgb = { r: 0.8, g: 0.7, b: 0.4 } // Golden metallic color
+        const rgb = { r: 0.85, g: 0.85, b: 0.9 } // Titanium color
         
         property.setColor(rgb.r, rgb.g, rgb.b)
         property.setDiffuseColor(rgb.r, rgb.g, rgb.b)
-        property.setAmbientColor(rgb.r * 0.3, rgb.g * 0.3, rgb.b * 0.3)
-        property.setSpecularColor(1, 1, 0.8)
+        property.setAmbientColor(rgb.r * 0.2, rgb.g * 0.2, rgb.b * 0.2)
+        property.setSpecularColor(1.0, 1.0, 1.0)
         
-        // Metallic appearance
-        property.setAmbient(0.2)
-        property.setDiffuse(0.7)
-        property.setSpecular(0.8)
-        property.setSpecularPower(30)
+        // Premium metallic appearance with better light response
+        property.setAmbient(0.15)
+        property.setDiffuse(0.6)
+        property.setSpecular(0.9)
+        property.setSpecularPower(50)
         property.setOpacity(1.0)
+        property.setMetallic(0.8)
+        property.setRoughness(0.2)
         
         property.setLighting(true)
         property.setInterpolationToPhong()
@@ -246,23 +294,9 @@ export function ImplantViewer({ implant, isVisible, onClose, className, sidebarC
     loadImplantSTL()
   }, [implant, vtkReady])
 
-  // Handle collapse state changes and resize VTK
-  useEffect(() => {
-    if (!isCollapsed && vtkReady && vtkObjectsRef.current.fullScreenRenderWindow) {
-      // Small delay to ensure DOM is updated
-      setTimeout(() => {
-        if (vtkObjectsRef.current.fullScreenRenderWindow) {
-          vtkObjectsRef.current.fullScreenRenderWindow.resize()
-          vtkObjectsRef.current.renderWindow?.render()
-          console.log('Implant VTK resized after collapse state change')
-        }
-      }, 150)
-    }
-  }, [isCollapsed, vtkReady])
-
   // Handle sidebar state changes and resize VTK
   useEffect(() => {
-    if (vtkReady && vtkObjectsRef.current.fullScreenRenderWindow) {
+    if (vtkReady && !isCollapsed && vtkObjectsRef.current.fullScreenRenderWindow) {
       setTimeout(() => {
         if (vtkObjectsRef.current.fullScreenRenderWindow) {
           vtkObjectsRef.current.fullScreenRenderWindow.resize()
@@ -271,7 +305,7 @@ export function ImplantViewer({ implant, isVisible, onClose, className, sidebarC
         }
       }, 300) // Longer delay for sidebar animation
     }
-  }, [sidebarCollapsed, vtkReady])
+  }, [sidebarCollapsed, vtkReady, isCollapsed])
 
   // Reset camera view
   const resetCamera = () => {
@@ -283,12 +317,12 @@ export function ImplantViewer({ implant, isVisible, onClose, className, sidebarC
 
   if (!isVisible) return null
 
-  // Calculate position based on sidebar state
-  const leftPosition = sidebarCollapsed ? "left-20" : "left-80"
+  // Calculate position based on sidebar state and screen size
+  const leftPosition = sidebarCollapsed ? "left-4 sm:left-20" : "left-4 sm:left-80"
 
   return (
     <Card className={cn(
-      "fixed bottom-4 w-80 shadow-lg z-50 transition-all duration-300 ease-in-out",
+      "fixed bottom-4 w-[calc(100vw-2rem)] sm:w-80 shadow-lg z-50 transition-all duration-300 ease-in-out",
       leftPosition,
       className
     )}>
@@ -331,7 +365,7 @@ export function ImplantViewer({ implant, isVisible, onClose, className, sidebarC
       
       {!isCollapsed && (
         <CardContent className="p-0">
-          <div className="h-48 relative bg-slate-900">
+          <div className="h-36 sm:h-48 relative bg-slate-900">
             <div
               ref={vtkContainerRef}
               className="absolute inset-0"

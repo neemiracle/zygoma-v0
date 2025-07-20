@@ -8,9 +8,28 @@ import "./globals.css"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "Next.js Auth0 Monorepo",
-  description: "Production-ready monorepo with Auth0 authentication",
-    generator: 'v0.dev'
+  title: "Dental STL Viewer",
+  description: "Advanced STL viewer for dental implant analysis and visualization",
+  generator: 'v0.dev',
+  icons: {
+    icon: [
+      {
+        url: '/favicon.ico',
+        sizes: 'any',
+      },
+      {
+        url: '/icon.svg',
+        type: 'image/svg+xml',
+      },
+    ],
+    apple: [
+      {
+        url: '/apple-touch-icon.png',
+        sizes: '180x180',
+        type: 'image/png',
+      },
+    ],
+  },
 }
 
 export default function RootLayout({

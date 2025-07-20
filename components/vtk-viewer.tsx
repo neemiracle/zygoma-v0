@@ -409,6 +409,127 @@ export const VTKViewer = React.forwardRef<VTKViewerRef, VTKViewerProps>(({
     }
   }
 
+  // Apply view settings to VTK viewer
+  const applySettings = async (settings: ViewSettings) => {
+    if (!vtkReady || !vtkObjectsRef.current.renderer || !vtkObjectsRef.current.renderWindow) {
+      console.warn('VTK not ready, cannot apply settings')
+      return
+    }
+
+    try {
+      console.log('Applying view settings:', settings)
+      const { renderer, renderWindow, currentActor } = vtkObjectsRef.current
+
+      // Apply display settings
+      if (currentActor) {
+        const property = currentActor.getProperty()
+        
+        // Wireframe mode
+        if (settings.display.wireframe) {
+          property.setRepresentationToWireframe()
+        } else {
+          property.setRepresentationToSurface()
+        }
+        
+        // Transparency
+        const opacity = (100 - settings.display.transparency[0]) / 100
+        property.setOpacity(opacity)
+        
+        // Material settings
+        const metallic = settings.material.metallic[0] / 100
+        const roughness = settings.material.roughness[0] / 100
+        const reflectance = settings.material.reflectance[0] / 100
+        
+        if (property.setMetallic) property.setMetallic(metallic)
+        if (property.setRoughness) property.setRoughness(roughness)
+        
+        // Adjust material based on surface type
+        switch (settings.material.surfaceType) {
+          case 'default':
+            // VTK default material properties
+            property.setAmbient(0.1)
+            property.setDiffuse(1.0)
+            property.setSpecular(0.0)
+            property.setSpecularPower(1)
+            break
+          case 'titanium':
+            property.setAmbient(0.15)
+            property.setDiffuse(0.6)
+            property.setSpecular(0.9)
+            property.setSpecularPower(50)
+            break
+          case 'stainless-steel':
+            property.setAmbient(0.1)
+            property.setDiffuse(0.7)
+            property.setSpecular(0.95)
+            property.setSpecularPower(80)
+            break
+          case 'ceramic':
+            property.setAmbient(0.3)
+            property.setDiffuse(0.8)
+            property.setSpecular(0.2)
+            property.setSpecularPower(10)
+            break
+          case 'plastic':
+            property.setAmbient(0.4)
+            property.setDiffuse(0.9)
+            property.setSpecular(0.1)
+            property.setSpecularPower(5)
+            break
+        }
+        
+        property.modified()
+        currentActor.modified()
+      }
+
+      // Apply lighting settings
+      const lights = renderer.getLights()
+      if (lights.length > 0) {
+        const light = lights[0]
+        const intensity = settings.lighting.intensity[0] / 100
+        light.setIntensity(intensity)
+        light.modified()
+      }
+
+      // Apply camera settings
+      const camera = renderer.getActiveCamera()
+      if (camera) {
+        // Field of view (for perspective cameras)
+        if (settings.camera.perspective === 'perspective') {
+          camera.setViewAngle(settings.camera.fieldOfView[0])
+        }
+        
+        // Switch between perspective and orthographic
+        if (settings.camera.perspective === 'orthographic') {
+          camera.setParallelProjection(true)
+        } else {
+          camera.setParallelProjection(false)
+        }
+        
+        camera.modified()
+        
+        // Auto-fit if enabled
+        if (settings.camera.autoFit) {
+          renderer.resetCamera()
+        }
+      }
+
+      // Background color based on display settings
+      if (settings.display.showGrid) {
+        renderer.setBackground(0.2, 0.2, 0.2) // Lighter for grid visibility
+      } else {
+        renderer.setBackground(0.1, 0.1, 0.2) // VTK default-ish background
+      }
+
+      // Force render to apply all changes
+      renderWindow.render()
+      console.log('✓ View settings applied successfully')
+      
+    } catch (error) {
+      console.error('Failed to apply view settings:', error)
+    }
+  }
+
   // Expose functions for parent component
   React.useImperativeHandle(ref, () => ({
     importSTL: () => fileInputRef.current?.click(),
@@ -416,7 +537,8 @@ export const VTKViewer = React.forwardRef<VTKViewerRef, VTKViewerProps>(({
     resetCamera,
     loadSTLFile,
     loadTestSTL,
-    clearSTL
+    clearSTL,
+    applySettings
   }))
 
   return (
@@ -450,6 +572,7 @@ export const VTKViewer = React.forwardRef<VTKViewerRef, VTKViewerProps>(({
         )}
 
         {/* Test STL Button - Top Left Corner (temporary for debugging) */}
+        {/* as not needed
         {vtkReady && !isLoading && (
           <Button
             onClick={loadTestSTL}
@@ -460,6 +583,7 @@ export const VTKViewer = React.forwardRef<VTKViewerRef, VTKViewerProps>(({
             Load Test STL
           </Button>
         )}
+        */}
 
         {/* Loading overlay */}
         {isLoading && (
@@ -491,6 +615,44 @@ export const VTKViewer = React.forwardRef<VTKViewerRef, VTKViewerProps>(({
           </div>
         )}
 
+        {/* Instructions when no STL loaded */}
+        {vtkReady && !isLoading && !fileName && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="bg-background/95 backdrop-blur-sm p-8 rounded-lg shadow-lg text-center max-w-md">
+              <h3 className="text-lg font-semibold mb-6">Getting Started</h3>
+              <div className="space-y-4 text-left">
+                <div className="flex items-start gap-3">
+                  <div className="w-6 h-6 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm font-medium">
+                    1
+                  </div>
+                  <div>
+                    <div className="font-medium">Load STL</div>
+                    <div className="text-sm text-muted-foreground">Import your STL file from the sidebar</div>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-6 h-6 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm font-medium">
+                    2
+                  </div>
+                  <div>
+                    <div className="font-medium">Select Implant from Library</div>
+                    <div className="text-sm text-muted-foreground">Browse implants in the library for comparison</div>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-6 h-6 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm font-medium">
+                    3
+                  </div>
+                  <div>
+                    <div className="font-medium">Export STL</div>
+                    <div className="text-sm text-muted-foreground">Save your modified STL file</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* VTK not ready state */}
         {!vtkReady && !isLoading && (
           <div className="absolute inset-0 flex items-center justify-center">
@@ -509,6 +671,32 @@ export const VTKViewer = React.forwardRef<VTKViewerRef, VTKViewerProps>(({
 VTKViewer.displayName = "VTKViewer"
 
 // Export the ref type for parent components
+export type ViewSettings = {
+  display: {
+    wireframe: boolean
+    showGrid: boolean
+    showAxes: boolean
+    transparency: number[]
+  }
+  lighting: {
+    intensity: number[]
+    ambientLight: number[]
+    shadows: boolean
+    autoRotate: boolean
+  }
+  material: {
+    metallic: number[]
+    roughness: number[]
+    reflectance: number[]
+    surfaceType: string
+  }
+  camera: {
+    fieldOfView: number[]
+    perspective: string
+    autoFit: boolean
+  }
+}
+
 export type VTKViewerRef = {
   importSTL: () => void
   exportSTL: () => void
@@ -516,4 +704,5 @@ export type VTKViewerRef = {
   loadSTLFile: (file: File) => Promise<void>
   loadTestSTL: () => Promise<void>
   clearSTL: () => void
+  applySettings: (settings: ViewSettings) => void
 }

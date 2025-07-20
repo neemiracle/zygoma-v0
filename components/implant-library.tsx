@@ -123,28 +123,28 @@ export function ImplantLibrary({ open, onOpenChange, onImplantSelect }: ImplantL
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-6xl max-h-[80vh]">
-        <DialogHeader>
+      <DialogContent className="max-w-[95vw] w-full max-h-[90vh] h-[90vh] flex flex-col p-0 md:max-w-6xl">
+        <DialogHeader className="px-6 py-4 border-b">
           <DialogTitle>Implant Library</DialogTitle>
         </DialogHeader>
         
-        <div className="flex gap-4 h-[60vh]">
+        <div className="flex-1 flex flex-col lg:flex-row gap-4 p-4 min-h-0 overflow-hidden">
           {/* Manufacturers Column */}
-          <div className="w-1/4 border rounded-lg">
+          <div className="w-full lg:w-1/4 border rounded-lg flex flex-col min-h-0">
             <div className="p-3 border-b bg-muted/50">
               <h3 className="font-medium">Manufacturers</h3>
             </div>
-            <ScrollArea className="h-[calc(60vh-60px)]">
+            <ScrollArea className="flex-1">
               <div className="p-2">
                 {Object.entries(manufacturers).map(([id, manufacturer]) => (
                   <Button
                     key={id}
                     variant={selectedManufacturer === id ? "default" : "ghost"}
-                    className="w-full justify-start mb-1"
+                    className="w-full justify-start mb-1 text-left h-auto p-2"
                     onClick={() => handleManufacturerSelect(id)}
                   >
-                    <div className="text-left">
-                      <div className="font-medium">{manufacturer.name}</div>
+                    <div className="flex flex-col items-start">
+                      <div className="font-medium text-sm">{manufacturer.name}</div>
                       <div className="text-xs text-muted-foreground">
                         {Object.keys(manufacturer.implants).length} implants
                       </div>
@@ -156,13 +156,13 @@ export function ImplantLibrary({ open, onOpenChange, onImplantSelect }: ImplantL
           </div>
 
           {/* Implants Column */}
-          <div className="w-1/4 border rounded-lg">
+          <div className="w-full lg:w-1/4 border rounded-lg flex flex-col min-h-0">
             <div className="p-3 border-b bg-muted/50">
-              <h3 className="font-medium">
+              <h3 className="font-medium text-sm">
                 {selectedManufacturerData ? selectedManufacturerData.name : "Select Manufacturer"}
               </h3>
             </div>
-            <ScrollArea className="h-[calc(60vh-60px)]">
+            <ScrollArea className="flex-1">
               <div className="p-2">
                 {implants.map((implant) => (
                   <Card
@@ -175,32 +175,23 @@ export function ImplantLibrary({ open, onOpenChange, onImplantSelect }: ImplantL
                     onClick={() => handleImplantSelect(implant)}
                   >
                     <CardContent className="p-3">
-                      <div className="flex gap-3">
+                      <div className="flex gap-2">
                         {/* STL Photo Placeholder */}
-                        <div className="w-12 h-12 bg-gradient-to-br from-slate-100 to-slate-200 rounded border flex items-center justify-center text-xs text-muted-foreground">
+                        <div className="w-10 h-10 bg-gradient-to-br from-slate-100 to-slate-200 rounded border flex items-center justify-center text-xs text-muted-foreground flex-shrink-0">
                           STL
                         </div>
                         
                         {/* Implant Info */}
                         <div className="flex-1 min-w-0">
-                          <div className="font-medium text-sm truncate text-foreground">
+                          <div className="font-medium text-xs truncate text-foreground">
                             {implant.name}
                           </div>
                           <div className="text-xs text-muted-foreground mt-0.5">
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-1">
                               <span>⌀{implant.diameter}</span>
                               <span>•</span>
                               <span>{implant.length}</span>
                             </div>
-                            <div className="mt-0.5">
-                              {implant.surface} • {implant.material}
-                            </div>
-                          </div>
-                          
-                          {/* Medical Grade Indicator */}
-                          <div className="flex items-center gap-1 mt-1">
-                            <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
-                            <span className="text-xs text-green-600 font-medium">Medical Grade</span>
                           </div>
                         </div>
                       </div>
@@ -212,103 +203,35 @@ export function ImplantLibrary({ open, onOpenChange, onImplantSelect }: ImplantL
           </div>
 
           {/* Implant Info Panel */}
-          <div className="w-1/2 border rounded-lg flex flex-col">
+          <div className="w-full lg:w-1/2 border rounded-lg flex flex-col min-h-0">
             <div className="p-3 border-b bg-muted/50">
               <h3 className="font-medium">Implant Details</h3>
             </div>
-            <div className="flex-1 p-4 overflow-hidden">
+            <div className="flex-1 p-4 min-h-0 overflow-hidden flex items-center justify-center">
               {selectedImplant ? (
-                <div className="h-full flex flex-col">
-                  {/* Header */}
-                  <div className="mb-4">
-                    <h4 className="text-lg font-semibold">{selectedImplant.name}</h4>
-                    <p className="text-sm text-muted-foreground line-clamp-2">{selectedImplant.description}</p>
-                  </div>
-
-                  {/* Basic Specifications */}
-                  <div className="grid grid-cols-2 gap-4 mb-4">
-                    <div className="space-y-3">
-                      <div>
-                        <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Diameter</div>
-                        <div className="text-lg font-semibold">{selectedImplant.diameter}</div>
-                      </div>
-                      <div>
-                        <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Surface</div>
-                        <div className="text-sm">{selectedImplant.surface}</div>
-                      </div>
-                    </div>
-                    <div className="space-y-3">
-                      <div>
-                        <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Length</div>
-                        <div className="text-lg font-semibold">{selectedImplant.length}</div>
-                      </div>
-                      <div>
-                        <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Material</div>
-                        <div className="text-sm">{selectedImplant.material}</div>
-                      </div>
+                <div className="text-center">
+                  {/* STL Image */}
+                  <div className="w-24 h-24 md:w-32 md:h-32 bg-gradient-to-br from-slate-100 to-slate-200 rounded-lg border-2 border-dashed border-muted-foreground/30 flex items-center justify-center mb-4 mx-auto">
+                    <div className="text-center">
+                      <div className="text-2xl md:text-3xl mb-1">🦷</div>
+                      <div className="text-xs text-muted-foreground">STL Preview</div>
                     </div>
                   </div>
-
-                  <Separator className="my-4" />
-
-                  {/* Key Features */}
-                  <div className="mb-4">
-                    <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Key Features</div>
-                    <div className="flex flex-wrap gap-1">
-                      {selectedImplant.features.slice(0, 4).map((feature, index) => (
-                        <Badge key={index} variant="secondary" className="text-xs">
-                          {feature}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Primary Indications */}
-                  <div className="mb-4">
-                    <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Primary Indications</div>
-                    <div className="flex flex-wrap gap-1">
-                      {selectedImplant.indications.slice(0, 3).map((indication, index) => (
-                        <Badge key={index} variant="outline" className="text-xs">
-                          {indication}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Available Size Range */}
-                  <div className="mt-auto">
-                    <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Available Range</div>
-                    <div className="grid grid-cols-2 gap-3 text-xs">
-                      <div className="bg-muted/30 p-2 rounded">
-                        <div className="font-medium">Diameters</div>
-                        <div className="text-muted-foreground">
-                          {selectedImplant.sizes.diameter.slice(0, 3).join(", ")}
-                          {selectedImplant.sizes.diameter.length > 3 && "..."}
-                        </div>
-                      </div>
-                      <div className="bg-muted/30 p-2 rounded">
-                        <div className="font-medium">Lengths</div>
-                        <div className="text-muted-foreground">
-                          {selectedImplant.sizes.length.slice(0, 3).join(", ")}
-                          {selectedImplant.sizes.length.length > 3 && "..."}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                  
+                  {/* Implant Name Only */}
+                  <h4 className="text-base md:text-lg font-semibold text-center break-words">{selectedImplant.name}</h4>
                 </div>
               ) : (
-                <div className="flex items-center justify-center h-full text-muted-foreground">
-                  <div className="text-center">
-                    <div className="text-lg mb-2">📋</div>
-                    <div className="text-sm">Select an implant to view details</div>
-                  </div>
+                <div className="text-center text-muted-foreground">
+                  <div className="text-3xl md:text-4xl mb-3">🦷</div>
+                  <div className="text-sm">Select an implant to view details</div>
                 </div>
               )}
             </div>
           </div>
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="px-6 py-4 border-t">
           <Button variant="outline" onClick={handleCancel}>
             Close
           </Button>

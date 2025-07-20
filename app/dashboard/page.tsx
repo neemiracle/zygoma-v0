@@ -18,6 +18,7 @@ import { X } from "lucide-react"
 import { ColorPopup } from "@/components/color-popup"
 import { ImplantLibrary } from "@/components/implant-library"
 import { ImplantViewer } from "@/components/implant-viewer"
+import { ViewSettingsPopup } from "@/components/view-settings-popup"
 
 function DashboardContent() {
   const { user, isLoading } = useUser()
@@ -30,6 +31,7 @@ function DashboardContent() {
   const [showLibrary, setShowLibrary] = useState<boolean>(false)
   const [selectedImplant, setSelectedImplant] = useState<any>(null)
   const [showImplantViewer, setShowImplantViewer] = useState<boolean>(false)
+  const [showViewSettings, setShowViewSettings] = useState<boolean>(false)
 
   const sidebarCollapsed = state === "collapsed"
 
@@ -85,6 +87,17 @@ function DashboardContent() {
     setShowLibrary(true)
   }
 
+  // Handle view settings open
+  const handleViewSettingsOpen = () => {
+    setShowViewSettings(true)
+  }
+
+  // Handle view settings apply
+  const handleViewSettingsApply = (settings: any) => {
+    console.log('Dashboard received settings:', settings)
+    vtkViewerRef.current?.applySettings(settings)
+  }
+
   // Handle implant selection from library
   const handleImplantSelect = async (implant: any, manufacturer: string) => {
     try {
@@ -135,6 +148,7 @@ function DashboardContent() {
         onImportSTL={handleImportSTL}
         onExportSTL={handleExportSTL}
         onLibraryOpen={handleLibraryOpen}
+        onViewSettingsOpen={handleViewSettingsOpen}
       />
       <SidebarInset>
         <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
@@ -208,6 +222,13 @@ function DashboardContent() {
           isVisible={showImplantViewer}
           onClose={handleImplantViewerClose}
           sidebarCollapsed={sidebarCollapsed}
+        />
+        
+        {/* View Settings Popup */}
+        <ViewSettingsPopup
+          open={showViewSettings}
+          onOpenChange={setShowViewSettings}
+          onApplySettings={handleViewSettingsApply}
         />
       </SidebarInset>
     </>

@@ -23,6 +23,7 @@ export function NavMain({
   onImportSTL,
   onExportSTL,
   onLibraryOpen,
+  onViewSettingsOpen,
 }: {
   items: {
     title: string
@@ -38,6 +39,7 @@ export function NavMain({
   onImportSTL?: () => void
   onExportSTL?: () => void
   onLibraryOpen?: () => void
+  onViewSettingsOpen?: () => void
 }) {
   const handleItemClick = (item: typeof items[0]) => {
     if (item.action === "import") {
@@ -46,6 +48,8 @@ export function NavMain({
       onExportSTL?.()
     } else if (item.action === "library") {
       onLibraryOpen?.()
+    } else if (item.action === "view-settings") {
+      onViewSettingsOpen?.()
     }
   }
 

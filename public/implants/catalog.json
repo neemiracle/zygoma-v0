@@ -56,6 +56,84 @@
             "diameter": ["3.0mm", "3.5mm", "4.3mm", "5.0mm"],
             "length": ["7mm", "8.5mm", "10mm", "11.5mm", "13mm", "15mm", "18mm"]
           }
+        },
+        "active_5.0": {
+          "id": "active_5.0",
+          "name": "NobelActive 5.0mm",
+          "diameter": "5.0mm",
+          "length": "8.5mm",
+          "file": "/implants/nobel/active_5.0.stl",
+          "thumbnail": "/implants/thumbnails/nobel_active_5.0.png",
+          "surface": "TiUnite",
+          "material": "Titanium Grade 4",
+          "description": "Wide diameter NobelActive implant for molar replacement and wide ridges.",
+          "features": [
+            "Wide diameter",
+            "High surface area",
+            "Molar replacement",
+            "TiUnite surface"
+          ],
+          "indications": [
+            "Molar sites",
+            "Wide ridges",
+            "High load areas"
+          ],
+          "sizes": {
+            "diameter": ["3.0mm", "3.5mm", "4.3mm", "5.0mm"],
+            "length": ["7mm", "8.5mm", "10mm", "11.5mm", "13mm", "15mm", "18mm"]
+          }
+        },
+        "speedy_groovy": {
+          "id": "speedy_groovy",
+          "name": "NobelSpeedy Groovy",
+          "diameter": "4.0mm",
+          "length": "7mm",
+          "file": "/implants/nobel/speedy_groovy.stl",
+          "thumbnail": "/implants/thumbnails/nobel_speedy_groovy.png",
+          "surface": "TiUnite",
+          "material": "Titanium Grade 4",
+          "description": "Self-drilling implant with groovy surface for immediate placement protocols.",
+          "features": [
+            "Self-drilling",
+            "Groovy surface",
+            "Immediate placement",
+            "Simplified protocol"
+          ],
+          "indications": [
+            "Immediate placement",
+            "Fresh extraction",
+            "Simplified surgery"
+          ],
+          "sizes": {
+            "diameter": ["3.5mm", "4.0mm", "4.3mm", "5.0mm"],
+            "length": ["7mm", "8.5mm", "10mm", "11.5mm", "13mm"]
+          }
+        },
+        "replace_select": {
+          "id": "replace_select",
+          "name": "NobelReplace Select",
+          "diameter": "4.3mm",
+          "length": "11.5mm",
+          "file": "/implants/nobel/replace_select.stl",
+          "thumbnail": "/implants/thumbnails/nobel_replace_select.png",
+          "surface": "TiUnite",
+          "material": "Titanium Grade 4",
+          "description": "Tapered implant with internal tri-channel connection for optimal soft tissue management.",
+          "features": [
+            "Tapered design",
+            "Tri-channel connection",
+            "Platform switching",
+            "Soft tissue management"
+          ],
+          "indications": [
+            "Esthetic zone",
+            "Platform switching",
+            "Soft tissue preservation"
+          ],
+          "sizes": {
+            "diameter": ["3.5mm", "4.3mm", "5.0mm"],
+            "length": ["8.5mm", "10mm", "11.5mm", "13mm", "15mm", "18mm"]
+          }
         }
       }
     },
@@ -115,6 +193,84 @@
             "diameter": ["3.3mm", "4.1mm", "4.8mm"],
             "length": ["6mm", "8mm", "10mm", "12mm", "14mm", "16mm"]
           }
+        },
+        "roxolid_4.8": {
+          "id": "roxolid_4.8",
+          "name": "Straumann Roxolid 4.8mm",
+          "diameter": "4.8mm",
+          "length": "8mm",
+          "file": "/implants/straumann/roxolid_4.8.stl",
+          "thumbnail": "/implants/thumbnails/straumann_roxolid_4.8.png",
+          "surface": "SLA",
+          "material": "Roxolid (Ti-Zr)",
+          "description": "Wide diameter Roxolid implant for molar replacement and high load areas.",
+          "features": [
+            "Roxolid Ti-Zr alloy",
+            "Wide diameter",
+            "High load capacity",
+            "SLA surface"
+          ],
+          "indications": [
+            "Molar replacement",
+            "High load areas",
+            "Wide ridges"
+          ],
+          "sizes": {
+            "diameter": ["3.3mm", "4.1mm", "4.8mm"],
+            "length": ["6mm", "8mm", "10mm", "12mm", "14mm", "16mm"]
+          }
+        },
+        "bone_level_tapered": {
+          "id": "bone_level_tapered",
+          "name": "Straumann BLT 4.1mm",
+          "diameter": "4.1mm",
+          "length": "10mm",
+          "file": "/implants/straumann/blt_4.1.stl",
+          "thumbnail": "/implants/thumbnails/straumann_blt_4.1.png",
+          "surface": "SLActive",
+          "material": "Titanium Grade 4",
+          "description": "Bone Level Tapered implant with SLActive surface for enhanced osseointegration.",
+          "features": [
+            "Tapered design",
+            "SLActive surface",
+            "Bone level",
+            "CrossFit connection"
+          ],
+          "indications": [
+            "Esthetic zone",
+            "Immediate placement",
+            "All bone types"
+          ],
+          "sizes": {
+            "diameter": ["3.3mm", "4.1mm", "4.8mm"],
+            "length": ["6mm", "8mm", "10mm", "12mm", "14mm", "16mm"]
+          }
+        },
+        "tissue_level": {
+          "id": "tissue_level",
+          "name": "Straumann Tissue Level",
+          "diameter": "4.1mm",
+          "length": "12mm",
+          "file": "/implants/straumann/tissue_level.stl",
+          "thumbnail": "/implants/thumbnails/straumann_tissue_level.png",
+          "surface": "SLA",
+          "material": "Titanium Grade 4",
+          "description": "Classic tissue level implant with proven long-term success rates.",
+          "features": [
+            "Tissue level",
+            "Proven success",
+            "Two-piece design",
+            "SLA surface"
+          ],
+          "indications": [
+            "Standard cases",
+            "Two-stage protocol",
+            "All bone types"
+          ],
+          "sizes": {
+            "diameter": ["3.3mm", "4.1mm", "4.8mm"],
+            "length": ["8mm", "10mm", "12mm", "14mm", "16mm"]
+          }
         }
       }
     },
@@ -172,6 +328,84 @@
           ],
           "sizes": {
             "diameter": ["3.7mm", "4.7mm", "5.7mm"],
+            "length": ["8mm", "10mm", "11.5mm", "13mm", "15mm", "18mm"]
+          }
+        },
+        "tsv_5.7": {
+          "id": "tsv_5.7",
+          "name": "Zimmer TSV 5.7mm",
+          "diameter": "5.7mm",
+          "length": "8mm",
+          "file": "/implants/zimmer/tsv_5.7.stl",
+          "thumbnail": "/implants/thumbnails/zimmer_tsv_5.7.png",
+          "surface": "MTX",
+          "material": "Titanium Grade 4",
+          "description": "Wide diameter TSV implant for molar replacement and wide ridges.",
+          "features": [
+            "Wide diameter",
+            "Tapered design",
+            "MTX surface",
+            "High load capacity"
+          ],
+          "indications": [
+            "Molar replacement",
+            "Wide ridges",
+            "High load areas"
+          ],
+          "sizes": {
+            "diameter": ["3.7mm", "4.7mm", "5.7mm"],
+            "length": ["8mm", "10mm", "11.5mm", "13mm", "15mm", "18mm"]
+          }
+        },
+        "trabecular_metal": {
+          "id": "trabecular_metal",
+          "name": "Zimmer Trabecular Metal",
+          "diameter": "4.1mm",
+          "length": "10mm",
+          "file": "/implants/zimmer/trabecular_metal.stl",
+          "thumbnail": "/implants/thumbnails/zimmer_trabecular_metal.png",
+          "surface": "Trabecular Metal",
+          "material": "Tantalum Core",
+          "description": "Revolutionary trabecular metal technology for enhanced osseointegration.",
+          "features": [
+            "Trabecular metal",
+            "Tantalum core",
+            "High porosity",
+            "Enhanced integration"
+          ],
+          "indications": [
+            "Poor bone quality",
+            "Revision cases",
+            "Enhanced integration"
+          ],
+          "sizes": {
+            "diameter": ["3.7mm", "4.1mm", "4.7mm"],
+            "length": ["8mm", "10mm", "11.5mm", "13mm", "15mm"]
+          }
+        },
+        "swissplus": {
+          "id": "swissplus",
+          "name": "Zimmer SwissPlus",
+          "diameter": "4.1mm",
+          "length": "11.5mm",
+          "file": "/implants/zimmer/swissplus.stl",
+          "thumbnail": "/implants/thumbnails/zimmer_swissplus.png",
+          "surface": "SLA",
+          "material": "Titanium Grade 4",
+          "description": "Precision Swiss engineering with SLA surface for reliable osseointegration.",
+          "features": [
+            "Swiss precision",
+            "SLA surface",
+            "Internal hex",
+            "Reliable integration"
+          ],
+          "indications": [
+            "Standard cases",
+            "All bone types",
+            "Precision placement"
+          ],
+          "sizes": {
+            "diameter": ["3.3mm", "4.1mm", "4.8mm"],
             "length": ["8mm", "10mm", "11.5mm", "13mm", "15mm", "18mm"]
           }
         }

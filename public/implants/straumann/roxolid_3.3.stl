@@ -1,86 +1,58 @@
-solid cube
+solid nobel_active_5.0_11.5mm
   facet normal 0.0 0.0 1.0
     outer loop
-      vertex 0.0 0.0 1.0
-      vertex 1.0 0.0 1.0
-      vertex 1.0 1.0 1.0
-    endloop
-  endfacet
-  facet normal 0.0 0.0 1.0
-    outer loop
-      vertex 0.0 0.0 1.0
-      vertex 1.0 1.0 1.0
-      vertex 0.0 1.0 1.0
+      vertex 0.0 0.0 0.0
+      vertex 2.5 0.0 0.0
+      vertex 1.25 2.165 0.0
     endloop
   endfacet
   facet normal 0.0 0.0 -1.0
     outer loop
-      vertex 0.0 0.0 0.0
-      vertex 1.0 1.0 0.0
-      vertex 1.0 0.0 0.0
+      vertex 0.0 0.0 11.5
+      vertex 1.25 2.165 11.5
+      vertex 2.5 0.0 11.5
     endloop
   endfacet
-  facet normal 0.0 0.0 -1.0
+  facet normal 0.866 -0.5 0.0
+    outer loop
+      vertex 2.5 0.0 0.0
+      vertex 2.5 0.0 11.5
+      vertex 1.25 2.165 0.0
+    endloop
+  endfacet
+  facet normal 0.866 -0.5 0.0
+    outer loop
+      vertex 1.25 2.165 0.0
+      vertex 2.5 0.0 11.5
+      vertex 1.25 2.165 11.5
+    endloop
+  endfacet
+  facet normal -0.866 -0.5 0.0
     outer loop
       vertex 0.0 0.0 0.0
-      vertex 0.0 1.0 0.0
-      vertex 1.0 1.0 0.0
+      vertex 1.25 2.165 0.0
+      vertex 0.0 0.0 11.5
+    endloop
+  endfacet
+  facet normal -0.866 -0.5 0.0
+    outer loop
+      vertex 1.25 2.165 0.0
+      vertex 1.25 2.165 11.5
+      vertex 0.0 0.0 11.5
     endloop
   endfacet
   facet normal 0.0 1.0 0.0
     outer loop
-      vertex 0.0 1.0 0.0
-      vertex 0.0 1.0 1.0
-      vertex 1.0 1.0 1.0
+      vertex 0.0 0.0 0.0
+      vertex 0.0 0.0 11.5
+      vertex 2.5 0.0 0.0
     endloop
   endfacet
   facet normal 0.0 1.0 0.0
     outer loop
-      vertex 0.0 1.0 0.0
-      vertex 1.0 1.0 1.0
-      vertex 1.0 1.0 0.0
+      vertex 2.5 0.0 0.0
+      vertex 0.0 0.0 11.5
+      vertex 2.5 0.0 11.5
     endloop
   endfacet
-  facet normal 0.0 -1.0 0.0
-    outer loop
-      vertex 0.0 0.0 0.0
-      vertex 1.0 0.0 1.0
-      vertex 0.0 0.0 1.0
-    endloop
-  endfacet
-  facet normal 0.0 -1.0 0.0
-    outer loop
-      vertex 0.0 0.0 0.0
-      vertex 1.0 0.0 0.0
-      vertex 1.0 0.0 1.0
-    endloop
-  endfacet
-  facet normal 1.0 0.0 0.0
-    outer loop
-      vertex 1.0 0.0 0.0
-      vertex 1.0 1.0 0.0
-      vertex 1.0 1.0 1.0
-    endloop
-  endfacet
-  facet normal 1.0 0.0 0.0
-    outer loop
-      vertex 1.0 0.0 0.0
-      vertex 1.0 1.0 1.0
-      vertex 1.0 0.0 1.0
-    endloop
-  endfacet
-  facet normal -1.0 0.0 0.0
-    outer loop
-      vertex 0.0 0.0 0.0
-      vertex 0.0 0.0 1.0
-      vertex 0.0 1.0 1.0
-    endloop
-  endfacet
-  facet normal -1.0 0.0 0.0
-    outer loop
-      vertex 0.0 0.0 0.0
-      vertex 0.0 1.0 1.0
-      vertex 0.0 1.0 0.0
-    endloop
-  endfacet
-endsolid cube
+endsolid nobel_active_5.0_11.5mm
