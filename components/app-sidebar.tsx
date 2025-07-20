@@ -56,12 +56,12 @@ const data = {
       icon: Download,
       action: "export"
     },
-    {
-      title: "View Settings",
-      url: "#view",
-      icon: Settings2,
-      action: "view-settings"
-    },
+    // {
+    //   title: "View Settings",
+    //   url: "#view",
+    //   icon: Settings2,
+    //   action: "view-settings"
+    // },
   ],
 }
 
