@@ -159,7 +159,7 @@ importers:
         specifier: ^0.9.6
         version: 0.9.9(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       vtk.js:
-        specifier: ^34.5.0
+        specifier: latest
         version: 34.5.0(@babel/preset-env@7.28.0(@babel/core@7.28.0))(autoprefixer@10.4.21(postcss@8.5.6))(webpack@5.100.2)(wslink@2.3.4)
       wslink:
         specifier: ^2.3.4

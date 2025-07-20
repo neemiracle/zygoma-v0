@@ -9,10 +9,8 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
+import { Card, CardContent } from "@/components/ui/card"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Separator } from "@/components/ui/separator"
 
 interface Implant {
   id: string
@@ -53,7 +51,7 @@ export function ImplantLibrary({ open, onOpenChange, onImplantSelect }: ImplantL
   const [catalog, setCatalog] = useState<ImplantCatalog | null>(null)
   const [selectedManufacturer, setSelectedManufacturer] = useState<string>("")
   const [selectedImplant, setSelectedImplant] = useState<Implant | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
+  const [, setIsLoading] = useState(false)
 
   // Load implant catalog
   useEffect(() => {

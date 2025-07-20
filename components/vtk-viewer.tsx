@@ -2,9 +2,7 @@
 
 import React, { useRef, useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { RotateCcw, Palette } from "lucide-react"
+import { RotateCcw } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 interface VTKViewerProps {
@@ -30,7 +28,7 @@ const hexToRgb = (hex: string) => {
 export const VTKViewer = React.forwardRef<VTKViewerRef, VTKViewerProps>(({ 
   className, 
   onFileLoad, 
-  onColorChange, 
+  // onColorChange, 
   currentColor = "#4F46E5",
   fileName = ""
 }, ref) => {
@@ -41,8 +39,8 @@ export const VTKViewer = React.forwardRef<VTKViewerRef, VTKViewerProps>(({
   const [error, setError] = useState<string>("")
 
   // VTK objects refs - using same pattern as reference
-  const vtkModulesRef = useRef<any>({})
-  const vtkObjectsRef = useRef<any>({
+  const vtkModulesRef = useRef<Record<string, unknown>>({})
+  const vtkObjectsRef = useRef<Record<string, unknown>>({
     fullScreenRenderWindow: null,
     renderer: null,
     renderWindow: null,
@@ -163,7 +161,7 @@ export const VTKViewer = React.forwardRef<VTKViewerRef, VTKViewerProps>(({
       if (renderer) {
         // Remove all actors
         const actors = renderer.getActors()
-        actors.forEach((actor: any) => {
+        actors.forEach((actor: unknown) => {
           renderer.removeActor(actor)
         })
       }
@@ -342,20 +340,20 @@ export const VTKViewer = React.forwardRef<VTKViewerRef, VTKViewerProps>(({
   }
 
   // Handle color change
-  const handleColorChange = (color: string) => {
-    if (vtkObjectsRef.current.currentActor && vtkReady) {
-      const property = vtkObjectsRef.current.currentActor.getProperty()
-      const rgb = hexToRgb(color)
+  // const handleColorChange = (color: string) => {
+  //   if (vtkObjectsRef.current.currentActor && vtkReady) {
+  //     const property = vtkObjectsRef.current.currentActor.getProperty()
+  //     const rgb = hexToRgb(color)
 
-      property.setColor(rgb.r, rgb.g, rgb.b)
-      property.setDiffuseColor(rgb.r, rgb.g, rgb.b)
-      property.setAmbientColor(rgb.r, rgb.g, rgb.b)
+  //     property.setColor(rgb.r, rgb.g, rgb.b)
+  //     property.setDiffuseColor(rgb.r, rgb.g, rgb.b)
+  //     property.setAmbientColor(rgb.r, rgb.g, rgb.b)
 
-      property.modified()
-      vtkObjectsRef.current.renderWindow?.render()
-    }
-    onColorChange?.(color)
-  }
+  //     property.modified()
+  //     vtkObjectsRef.current.renderWindow?.render()
+  //   }
+  //   onColorChange?.(color)
+  // }
 
   // Reset camera view
   const resetCamera = () => {
@@ -438,7 +436,7 @@ export const VTKViewer = React.forwardRef<VTKViewerRef, VTKViewerProps>(({
         // Material settings
         const metallic = settings.material.metallic[0] / 100
         const roughness = settings.material.roughness[0] / 100
-        const reflectance = settings.material.reflectance[0] / 100
+        // const reflectance = settings.material.reflectance[0] / 100
         
         if (property.setMetallic) property.setMetallic(metallic)
         if (property.setRoughness) property.setRoughness(roughness)

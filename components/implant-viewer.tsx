@@ -22,16 +22,16 @@ interface ImplantViewerProps {
 }
 
 // Utility function to convert hex to RGB (0-1 range for VTK)
-const hexToRgb = (hex: string) => {
-  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
-  return result
-    ? {
-        r: parseInt(result[1], 16) / 255,
-        g: parseInt(result[2], 16) / 255,
-        b: parseInt(result[3], 16) / 255,
-      }
-    : { r: 0.8, g: 0.8, b: 0.9 }
-}
+// const hexToRgb = (hex: string) => {
+//   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
+//   return result
+//     ? {
+//         r: parseInt(result[1], 16) / 255,
+//         g: parseInt(result[2], 16) / 255,
+//         b: parseInt(result[3], 16) / 255,
+//       }
+//     : { r: 0.8, g: 0.8, b: 0.9 }
+// }
 
 export function ImplantViewer({ implant, isVisible, onClose, className, sidebarCollapsed = false }: ImplantViewerProps) {
   const vtkContainerRef = useRef<HTMLDivElement>(null)
@@ -41,8 +41,8 @@ export function ImplantViewer({ implant, isVisible, onClose, className, sidebarC
   const [error, setError] = useState<string>("")
 
   // VTK objects refs
-  const vtkModulesRef = useRef<any>({})
-  const vtkObjectsRef = useRef<any>({
+  const vtkModulesRef = useRef<Record<string, unknown>>({})
+  const vtkObjectsRef = useRef<Record<string, unknown>>({
     fullScreenRenderWindow: null,
     renderer: null,
     renderWindow: null,
@@ -68,7 +68,7 @@ export function ImplantViewer({ implant, isVisible, onClose, className, sidebarC
         const { fullScreenRenderWindow: existingRenderWindow, renderer: existingRenderer } = vtkObjectsRef.current
         if (existingRenderer) {
           const actors = existingRenderer.getActors()
-          actors.forEach((actor: any) => {
+          actors.forEach((actor: unknown) => {
             existingRenderer.removeActor(actor)
           })
         }
@@ -195,7 +195,7 @@ export function ImplantViewer({ implant, isVisible, onClose, className, sidebarC
       const { fullScreenRenderWindow, renderer } = vtkObjectsRef.current
       if (renderer) {
         const actors = renderer.getActors()
-        actors.forEach((actor: any) => {
+        actors.forEach((actor: unknown) => {
           renderer.removeActor(actor)
         })
       }

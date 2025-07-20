@@ -29,7 +29,12 @@ function DashboardContent() {
   const [currentColor, setCurrentColor] = useState<string>("#4F46E5")
   const [showColorPopup, setShowColorPopup] = useState<boolean>(false)
   const [showLibrary, setShowLibrary] = useState<boolean>(false)
-  const [selectedImplant, setSelectedImplant] = useState<any>(null)
+  const [selectedImplant, setSelectedImplant] = useState<{
+    id: string;
+    name: string;
+    file: string;
+    [key: string]: unknown;
+  } | null>(null)
   const [showImplantViewer, setShowImplantViewer] = useState<boolean>(false)
   const [showViewSettings, setShowViewSettings] = useState<boolean>(false)
 
@@ -93,13 +98,13 @@ function DashboardContent() {
   }
 
   // Handle view settings apply
-  const handleViewSettingsApply = (settings: any) => {
+  const handleViewSettingsApply = (settings: Record<string, unknown>) => {
     console.log('Dashboard received settings:', settings)
     vtkViewerRef.current?.applySettings(settings)
   }
 
   // Handle implant selection from library
-  const handleImplantSelect = async (implant: any, manufacturer: string) => {
+  const handleImplantSelect = async (implant: { id: string; name: string; file: string; [key: string]: unknown }, manufacturer: string) => {
     try {
       console.log("Loading implant:", implant.name, "from", manufacturer)
       

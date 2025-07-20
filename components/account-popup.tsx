@@ -17,7 +17,7 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { Trash2, AlertTriangle } from "lucide-react"
-import { useUser } from "@auth0/nextjs-auth0"
+// import { useUser } from "@auth0/nextjs-auth0"
 import {
   AlertDialog,
   AlertDialogAction,

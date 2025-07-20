@@ -2,16 +2,10 @@
 
 import * as React from "react"
 import {
-  AudioWaveform,
   Upload,
   Download,
-  Command,
-  FolderOpen,
   GalleryVerticalEnd,
   Library,
-  FileText,
-  Settings2,
-  Palette,
 } from "lucide-react"
 
 import { NavMain } from "@/components/nav-main"

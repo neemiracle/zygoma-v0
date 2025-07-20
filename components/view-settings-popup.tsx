@@ -13,8 +13,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Slider } from "@/components/ui/slider"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Separator } from "@/components/ui/separator"
 import {
   Select,
   SelectContent,
@@ -27,7 +25,7 @@ import { Monitor, Lightbulb, Palette, Camera } from "lucide-react"
 interface ViewSettingsPopupProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  onApplySettings?: (settings: any) => void
+  onApplySettings?: (settings: Record<string, unknown>) => void
 }
 
 export function ViewSettingsPopup({ open, onOpenChange, onApplySettings }: ViewSettingsPopupProps) {
