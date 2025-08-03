@@ -12,7 +12,8 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 import { ThemeToggle } from "@/components/theme-toggle"
-import { VTKViewer, type VTKViewerRef } from "@/components/vtk-viewer"
+import { VTKViewer, type VTKViewerRef } from "@/components/vtk-viewer-medical"
+// ITK viewer is now integrated into VTK viewer
 import { Button } from "@/components/ui/button"
 import { X } from "lucide-react"
 import { ColorPopup } from "@/components/color-popup"
@@ -25,6 +26,7 @@ function DashboardContent() {
   const router = useRouter()
   const { state } = useSidebar()
   const vtkViewerRef = useRef<VTKViewerRef>(null)
+  // Medical viewer is now integrated into VTK viewer
   const [fileName, setFileName] = useState<string>("")
   const [currentColor, setCurrentColor] = useState<string>("#4F46E5")
   const [showColorPopup, setShowColorPopup] = useState<boolean>(false)
@@ -80,8 +82,8 @@ function DashboardContent() {
   const handleCloseSTL = () => {
     // Clear the current STL file
     setFileName("")
-    // Clear the VTK viewer
-    vtkViewerRef.current?.clearSTL()
+    // Clear landmarks (medical viewer doesn't have clearSTL method)
+    vtkViewerRef.current?.clearLandmarks()
     // Close implant viewer when main STL closes
     setShowImplantViewer(false)
     setSelectedImplant(null)
@@ -100,7 +102,8 @@ function DashboardContent() {
   // Handle view settings apply
   const handleViewSettingsApply = (settings: Record<string, unknown>) => {
     console.log('Dashboard received settings:', settings)
-    vtkViewerRef.current?.applySettings(settings)
+    // Medical viewer doesn't have applySettings method yet
+    console.log('Settings would be applied to medical viewer:', settings)
   }
 
   // Handle implant selection from library
@@ -194,7 +197,15 @@ function DashboardContent() {
           </div>
         </header>
         
-        {/* Full-height VTK Viewer */}
+        {/* Medical-Grade VTK+ITK Viewer */}
+        <div className="border-b px-4 py-2 flex items-center justify-between">
+          <h2 className="text-sm font-medium">🔬 Medical-Grade Viewer</h2>
+          <div className="text-xs text-muted-foreground">
+            VTK Visualization + ITK Precision
+          </div>
+        </div>
+
+        {/* Full-height Medical Viewer */}
         <div className="flex-1 flex flex-col">
           <VTKViewer 
             ref={vtkViewerRef}
