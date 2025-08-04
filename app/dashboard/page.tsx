@@ -71,11 +71,17 @@ function DashboardContent() {
   // Handle file load callback (keeping for backwards compatibility)
   const handleFileLoad = (newFileName: string) => {
     handleFileLoadWithImplantClose(newFileName)
+    // Apply current color to newly loaded model
+    setTimeout(() => {
+      vtkViewerRef.current?.changeModelColor(currentColor)
+    }, 100) // Small delay to ensure model is loaded
   }
 
   // Handle color change callback
   const handleColorChange = (newColor: string) => {
     setCurrentColor(newColor)
+    // Update the 3D model color
+    vtkViewerRef.current?.changeModelColor(newColor)
     // Save color to localStorage
     localStorage.setItem('stl-viewer-color', newColor)
   }

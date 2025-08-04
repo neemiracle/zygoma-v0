@@ -527,6 +527,17 @@ export const VTKViewer = React.forwardRef<VTKViewerRef, VTKViewerProps>(({
     }
   }
 
+  // Change model color
+  const changeModelColor = (newColor: string) => {
+    const { currentActor, renderWindow } = vtkObjectsRef.current
+    if (currentActor && renderWindow) {
+      const rgb = hexToRgb(newColor)
+      currentActor.getProperty().setColor(rgb.r, rgb.g, rgb.b)
+      renderWindow.render()
+      console.log(`Changed model color to ${newColor} (RGB: ${rgb.r.toFixed(2)}, ${rgb.g.toFixed(2)}, ${rgb.b.toFixed(2)})`)
+    }
+  }
+
   // Expose functions
   React.useImperativeHandle(ref, () => ({
     importSTL: () => fileInputRef.current?.click(),
@@ -536,7 +547,8 @@ export const VTKViewer = React.forwardRef<VTKViewerRef, VTKViewerProps>(({
     clearLandmarks,
     highlightLandmark,
     deleteLandmark,
-    getLandmarks: () => landmarkPoints
+    getLandmarks: () => landmarkPoints,
+    changeModelColor
   }))
 
   return (
@@ -685,4 +697,5 @@ export type VTKViewerRef = {
   highlightLandmark: (landmarkId: string) => void
   deleteLandmark: (landmarkId: string) => void
   getLandmarks: () => Array<{ x: number; y: number; z: number; id: string }>
+  changeModelColor: (newColor: string) => void
 }
