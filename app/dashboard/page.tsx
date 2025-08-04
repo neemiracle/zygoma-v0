@@ -39,6 +39,8 @@ function DashboardContent() {
   } | null>(null)
   const [showImplantViewer, setShowImplantViewer] = useState<boolean>(false)
   const [showViewSettings, setShowViewSettings] = useState<boolean>(false)
+  const [landmarks, setLandmarks] = useState<Array<{ x: number; y: number; z: number; id: string }>>([])
+  const [selectedLandmarkId, setSelectedLandmarkId] = useState<string | undefined>(undefined)
 
   const sidebarCollapsed = state === "collapsed"
 
@@ -135,7 +137,32 @@ function DashboardContent() {
       // Close implant viewer when new main STL is loaded
       setShowImplantViewer(false)
       setSelectedImplant(null)
+      // Clear landmarks when new STL is loaded
+      setLandmarks([])
+      setSelectedLandmarkId(undefined)
     }
+  }
+
+  // Handle landmark click from sidebar
+  const handleLandmarkClick = (landmark: { x: number; y: number; z: number; id: string }) => {
+    setSelectedLandmarkId(landmark.id)
+    vtkViewerRef.current?.highlightLandmark(landmark.id)
+  }
+
+  // Handle landmark delete from sidebar
+  const handleLandmarkDelete = (landmarkId: string) => {
+    vtkViewerRef.current?.deleteLandmark(landmarkId)
+    // Update local state - the VTK viewer already updates its internal state
+    setLandmarks(prev => prev.filter(landmark => landmark.id !== landmarkId))
+    // Clear selection if deleted landmark was selected
+    if (selectedLandmarkId === landmarkId) {
+      setSelectedLandmarkId(undefined)
+    }
+  }
+
+  // Handle landmarks change from VTK viewer
+  const handleLandmarksChange = (newLandmarks: Array<{ x: number; y: number; z: number; id: string }>) => {
+    setLandmarks(newLandmarks)
   }
 
   if (isLoading) {
@@ -157,6 +184,10 @@ function DashboardContent() {
         onExportSTL={handleExportSTL}
         onLibraryOpen={handleLibraryOpen}
         onViewSettingsOpen={handleViewSettingsOpen}
+        landmarks={landmarks}
+        onLandmarkClick={handleLandmarkClick}
+        onLandmarkDelete={handleLandmarkDelete}
+        selectedLandmarkId={selectedLandmarkId}
       />
       <SidebarInset>
         <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
@@ -198,12 +229,12 @@ function DashboardContent() {
         </header>
         
         {/* Medical-Grade VTK+ITK Viewer */}
-        <div className="border-b px-4 py-2 flex items-center justify-between">
+        {/* <div className="border-b px-4 py-2 flex items-center justify-between">
           <h2 className="text-sm font-medium">🔬 Medical-Grade Viewer</h2>
           <div className="text-xs text-muted-foreground">
             VTK Visualization + ITK Precision
           </div>
-        </div>
+        </div> */}
 
         {/* Full-height Medical Viewer */}
         <div className="flex-1 flex flex-col">
@@ -214,6 +245,7 @@ function DashboardContent() {
             onColorChange={handleColorChange}
             currentColor={currentColor}
             fileName={fileName}
+            onLandmarksChange={handleLandmarksChange}
           />
         </div>
         

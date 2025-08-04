@@ -11,6 +11,7 @@ interface VTKViewerProps {
   onColorChange?: (color: string) => void
   currentColor?: string
   fileName?: string
+  onLandmarksChange?: (landmarks: Array<{ x: number; y: number; z: number; id: string }>) => void
 }
 
 // Utility function to convert hex to RGB (0-1 range for VTK)
@@ -29,7 +30,8 @@ export const VTKViewer = React.forwardRef<VTKViewerRef, VTKViewerProps>(({
   className, 
   onFileLoad, 
   currentColor = "#4F46E5",
-  fileName = ""
+  fileName = "",
+  onLandmarksChange
 }, ref) => {
   const vtkContainerRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -47,7 +49,8 @@ export const VTKViewer = React.forwardRef<VTKViewerRef, VTKViewerProps>(({
     renderWindow: null,
     currentActor: null,
     medicalPicker: null,
-    landmarkActors: []
+    landmarkActors: [],
+    landmarkMap: new Map() // Map landmark ID to actor for highlighting
   })
 
   // Initialize VTK.js with ITK.js integration
@@ -157,7 +160,8 @@ export const VTKViewer = React.forwardRef<VTKViewerRef, VTKViewerProps>(({
           currentActor: null,
           medicalPicker,
           performMedicalPick, // Store the wrapper function
-          landmarkActors: []
+          landmarkActors: [],
+          landmarkMap: new Map() // Initialize landmark map here
         }
 
         renderer.resetCamera()
@@ -257,7 +261,11 @@ export const VTKViewer = React.forwardRef<VTKViewerRef, VTKViewerProps>(({
           }
 
           createMedicalLandmark(newLandmark)
-          setLandmarkPoints(prev => [...prev, newLandmark])
+          setLandmarkPoints(prev => {
+            const newLandmarks = [...prev, newLandmark]
+            onLandmarksChange?.(newLandmarks)
+            return newLandmarks
+          })
         }
       }
       
@@ -320,6 +328,12 @@ export const VTKViewer = React.forwardRef<VTKViewerRef, VTKViewerProps>(({
     renderWindow.render()
 
     landmarkActors.push(sphereActor)
+    
+    // Store landmark in map for highlighting
+    const { landmarkMap } = vtkObjectsRef.current
+    if (landmarkMap) {
+      landmarkMap.set(landmark.id, sphereActor)
+    }
   }
 
   // Remove medical landmark
@@ -331,7 +345,11 @@ export const VTKViewer = React.forwardRef<VTKViewerRef, VTKViewerProps>(({
       renderer.removeActor(lastActor)
       renderWindow.render()
       
-      setLandmarkPoints(prev => prev.slice(0, -1))
+      setLandmarkPoints(prev => {
+        const newLandmarks = prev.slice(0, -1)
+        onLandmarksChange?.(newLandmarks)
+        return newLandmarks
+      })
     }
   }
 
@@ -441,12 +459,69 @@ export const VTKViewer = React.forwardRef<VTKViewerRef, VTKViewerProps>(({
 
   // Clear landmarks
   const clearLandmarks = () => {
-    const { renderer, renderWindow, landmarkActors } = vtkObjectsRef.current
-    if (landmarkActors) {
+    const { renderer, renderWindow, landmarkActors, landmarkMap } = vtkObjectsRef.current
+    if (landmarkActors && renderer && renderWindow) {
       landmarkActors.forEach((actor: any) => renderer.removeActor(actor))
       vtkObjectsRef.current.landmarkActors = []
+      if (landmarkMap) {
+        landmarkMap.clear()
+      }
       renderWindow.render()
       setLandmarkPoints([])
+      onLandmarksChange?.([])
+    }
+  }
+
+  // Highlight specific landmark
+  const highlightLandmark = (landmarkId: string) => {
+    const { landmarkMap, renderWindow } = vtkObjectsRef.current
+    
+    if (!landmarkMap || !renderWindow) return
+    
+    // Reset all landmarks to cyan
+    landmarkMap.forEach((actor: any) => {
+      const property = actor.getProperty()
+      property.setColor(0.0, 0.8, 1.0) // Medical cyan
+    })
+    
+    // Highlight selected landmark in red
+    const selectedActor = landmarkMap.get(landmarkId)
+    if (selectedActor) {
+      const property = selectedActor.getProperty()
+      property.setColor(1.0, 0.2, 0.2) // Bright red
+    }
+    
+    renderWindow.render()
+  }
+
+  // Delete specific landmark
+  const deleteLandmark = (landmarkId: string) => {
+    const { renderer, renderWindow, landmarkActors, landmarkMap } = vtkObjectsRef.current
+    
+    if (!landmarkMap || !renderer || !renderWindow || !landmarkActors) return
+    
+    const actorToRemove = landmarkMap.get(landmarkId)
+    if (actorToRemove) {
+      // Remove from renderer
+      renderer.removeActor(actorToRemove)
+      
+      // Remove from landmark actors array
+      const actorIndex = landmarkActors.indexOf(actorToRemove)
+      if (actorIndex > -1) {
+        landmarkActors.splice(actorIndex, 1)
+      }
+      
+      // Remove from landmark map
+      landmarkMap.delete(landmarkId)
+      
+      // Update state
+      setLandmarkPoints(prev => {
+        const newLandmarks = prev.filter(landmark => landmark.id !== landmarkId)
+        onLandmarksChange?.(newLandmarks)
+        return newLandmarks
+      })
+      
+      renderWindow.render()
     }
   }
 
@@ -457,6 +532,8 @@ export const VTKViewer = React.forwardRef<VTKViewerRef, VTKViewerProps>(({
     resetCamera,
     loadSTLFile,
     clearLandmarks,
+    highlightLandmark,
+    deleteLandmark,
     getLandmarks: () => landmarkPoints
   }))
 
@@ -534,22 +611,22 @@ export const VTKViewer = React.forwardRef<VTKViewerRef, VTKViewerProps>(({
         {vtkReady && fileName && (
           <div className="absolute bottom-2 right-2 bg-background/95 backdrop-blur-sm border rounded-lg px-3 py-2 text-sm font-mono">
             <div className="flex items-center gap-2">
-              <span className="text-muted-foreground">🔬 Medical Coordinates:</span>
+              {/* <span className="text-muted-foreground">Coordinates:</span> */}
               {currentIntersection ? (
                 <div className="flex gap-3">
-                  <span className="text-red-500">X: {currentIntersection.x.toFixed(5)}</span>
-                  <span className="text-green-500">Y: {currentIntersection.y.toFixed(5)}</span>
-                  <span className="text-blue-500">Z: {currentIntersection.z.toFixed(5)}</span>
+                  <span className="text-red-500">X: {currentIntersection.x.toFixed(2)}</span>
+                  <span className="text-green-500">Y: {currentIntersection.y.toFixed(2)}</span>
+                  <span className="text-blue-500">Z: {currentIntersection.z.toFixed(2)}</span>
                 </div>
               ) : (
                 <span className="text-muted-foreground">---</span>
               )}
             </div>
-            {landmarkPoints.length > 0 && (
+            {/* {landmarkPoints.length > 0 && (
               <div className="text-xs text-muted-foreground mt-1">
                 🎯 {landmarkPoints.length} medical landmark{landmarkPoints.length !== 1 ? 's' : ''} placed
               </div>
-            )}
+            )} */}
           </div>
         )}
 
@@ -603,5 +680,7 @@ export type VTKViewerRef = {
   resetCamera: () => void
   loadSTLFile: (file: File) => Promise<void>
   clearLandmarks: () => void
+  highlightLandmark: (landmarkId: string) => void
+  deleteLandmark: (landmarkId: string) => void
   getLandmarks: () => Array<{ x: number; y: number; z: number; id: string }>
 }

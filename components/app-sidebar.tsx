@@ -10,6 +10,7 @@ import {
 
 import { NavMain } from "@/components/nav-main"
 import { NavUser } from "@/components/nav-user"
+import { LandmarkTable } from "@/components/landmark-table"
 import {
   Sidebar,
   SidebarContent,
@@ -59,11 +60,22 @@ const data = {
   ],
 }
 
+interface Landmark {
+  x: number
+  y: number
+  z: number
+  id: string
+}
+
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
   onImportSTL?: () => void
   onExportSTL?: () => void
   onLibraryOpen?: () => void
   onViewSettingsOpen?: () => void
+  landmarks?: Landmark[]
+  onLandmarkClick?: (landmark: Landmark) => void
+  onLandmarkDelete?: (landmarkId: string) => void
+  selectedLandmarkId?: string
 }
 
 function CompanyLogo({ company }: { company: typeof data.company }) {
@@ -80,13 +92,23 @@ function CompanyLogo({ company }: { company: typeof data.company }) {
   )
 }
 
-export function AppSidebar({ onImportSTL, onExportSTL, onLibraryOpen, onViewSettingsOpen, ...props }: AppSidebarProps) {
+export function AppSidebar({ 
+  onImportSTL, 
+  onExportSTL, 
+  onLibraryOpen, 
+  onViewSettingsOpen,
+  landmarks = [],
+  onLandmarkClick,
+  onLandmarkDelete,
+  selectedLandmarkId,
+  ...props 
+}: AppSidebarProps) {
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
         <CompanyLogo company={data.company} />
       </SidebarHeader>
-      <SidebarContent>
+      <SidebarContent className="flex flex-col">
         <NavMain 
           items={data.navMain} 
           onImportSTL={onImportSTL}
@@ -94,6 +116,16 @@ export function AppSidebar({ onImportSTL, onExportSTL, onLibraryOpen, onViewSett
           onLibraryOpen={onLibraryOpen}
           onViewSettingsOpen={onViewSettingsOpen}
         />
+        
+        {/* Landmarks Table - Only show when sidebar is expanded */}
+        <div className="group-data-[collapsible=icon]:hidden mt-4 px-4 flex-1">
+          <LandmarkTable
+            landmarks={landmarks}
+            onLandmarkClick={onLandmarkClick}
+            onLandmarkDelete={onLandmarkDelete}
+            selectedLandmarkId={selectedLandmarkId}
+          />
+        </div>
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={data.user} />
