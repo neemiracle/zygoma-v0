@@ -84,8 +84,10 @@ function DashboardContent() {
   const handleCloseSTL = () => {
     // Clear the current STL file
     setFileName("")
-    // Clear landmarks (medical viewer doesn't have clearSTL method)
+    // Clear all landmarks and reset selection
     vtkViewerRef.current?.clearLandmarks()
+    setLandmarks([])
+    setSelectedLandmarkId(undefined)
     // Close implant viewer when main STL closes
     setShowImplantViewer(false)
     setSelectedImplant(null)
@@ -137,9 +139,10 @@ function DashboardContent() {
       // Close implant viewer when new main STL is loaded
       setShowImplantViewer(false)
       setSelectedImplant(null)
-      // Clear landmarks when new STL is loaded
+      // Clear all landmarks and reset selection when new STL is loaded
       setLandmarks([])
       setSelectedLandmarkId(undefined)
+      // The VTK viewer will also clear its internal landmarks via clearLandmarks()
     }
   }
 

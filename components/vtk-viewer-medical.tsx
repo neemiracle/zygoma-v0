@@ -415,9 +415,11 @@ export const VTKViewer = React.forwardRef<VTKViewerRef, VTKViewerProps>(({
       property.setLighting(true)
       property.setInterpolationToPhong()
 
-      // Replace previous mesh
+      // Replace previous mesh and clear all landmarks
       if (currentActor) {
         renderer.removeActor(currentActor)
+        // Clear all landmarks when new STL is loaded
+        clearLandmarks()
       }
 
       renderer.addActor(actor)
