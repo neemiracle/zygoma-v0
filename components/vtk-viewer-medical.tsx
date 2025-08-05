@@ -14,6 +14,16 @@ interface VTKViewerProps {
   onLandmarksChange?: (landmarks: Array<{ x: number; y: number; z: number; id: string }>) => void
 }
 
+interface Scanbody {
+  id: string
+  landmarks: Array<{ x: number; y: number; z: number; id: string }>
+  boundingBox?: {
+    center: { x: number; y: number; z: number }
+    size: number
+    actor?: unknown
+  }
+}
+
 // Utility function to convert hex to RGB (0-1 range for VTK)
 const hexToRgb = (hex: string) => {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
@@ -40,6 +50,7 @@ export const VTKViewer = React.forwardRef<VTKViewerRef, VTKViewerProps>(({
   const [error, setError] = useState<string>("")
   const [currentIntersection, setCurrentIntersection] = useState<{ x: number; y: number; z: number } | null>(null)
   const [landmarkPoints, setLandmarkPoints] = useState<Array<{ x: number; y: number; z: number; id: string }>>([])
+  const [scanbodies, setScanbodies] = useState<Array<Scanbody>>([])
 
   // VTK + ITK objects refs
   const vtkModulesRef = useRef<Record<string, unknown>>({})
@@ -50,7 +61,8 @@ export const VTKViewer = React.forwardRef<VTKViewerRef, VTKViewerProps>(({
     currentActor: null,
     medicalPicker: null,
     landmarkActors: [],
-    landmarkMap: new Map() // Map landmark ID to actor for highlighting
+    landmarkMap: new Map(), // Map landmark ID to actor for highlighting
+    boundingBoxActors: [] // Array to store bounding box actors
   })
 
   // Initialize VTK.js with ITK.js integration
@@ -74,6 +86,7 @@ export const VTKViewer = React.forwardRef<VTKViewerRef, VTKViewerProps>(({
           { default: vtkMapper },
           { default: vtkCellPicker },
           { default: vtkSphereSource },
+          { default: vtkCubeSource },
           itkWasm
         ] = await Promise.all([
           import("vtk.js/Sources/Rendering/Misc/FullScreenRenderWindow"),
@@ -83,6 +96,7 @@ export const VTKViewer = React.forwardRef<VTKViewerRef, VTKViewerProps>(({
           import("vtk.js/Sources/Rendering/Core/Mapper"),
           import("vtk.js/Sources/Rendering/Core/CellPicker"),
           import("vtk.js/Sources/Filters/Sources/SphereSource"),
+          import("vtk.js/Sources/Filters/Sources/CubeSource"),
           import('itk-wasm')
         ])
 
@@ -97,6 +111,7 @@ export const VTKViewer = React.forwardRef<VTKViewerRef, VTKViewerProps>(({
           vtkMapper,
           vtkCellPicker,
           vtkSphereSource,
+          vtkCubeSource,
           itkWasm
         }
 
@@ -161,7 +176,8 @@ export const VTKViewer = React.forwardRef<VTKViewerRef, VTKViewerProps>(({
           medicalPicker,
           performMedicalPick, // Store the wrapper function
           landmarkActors: [],
-          landmarkMap: new Map() // Initialize landmark map here
+          landmarkMap: new Map(), // Initialize landmark map here
+          boundingBoxActors: [] // Initialize bounding box actors array
         }
 
         renderer.resetCamera()
@@ -285,6 +301,155 @@ export const VTKViewer = React.forwardRef<VTKViewerRef, VTKViewerProps>(({
       container.removeEventListener('click', handleMedicalClick)
     }
   }, [vtkReady])
+
+  // Utility function to calculate distance between two 3D points
+  const calculateDistance = (p1: { x: number; y: number; z: number }, p2: { x: number; y: number; z: number }): number => {
+    const dx = p1.x - p2.x
+    const dy = p1.y - p2.y
+    const dz = p1.z - p2.z
+    return Math.sqrt(dx * dx + dy * dy + dz * dz)
+  }
+
+  // Check if three landmarks form a valid scanbody (all distances <= 5mm)
+  const isValidScanbody = (landmarks: Array<{ x: number; y: number; z: number; id: string }>): boolean => {
+    if (landmarks.length !== 3) return false
+    
+    const [p1, p2, p3] = landmarks
+    const dist12 = calculateDistance(p1, p2)
+    const dist13 = calculateDistance(p1, p3)
+    const dist23 = calculateDistance(p2, p3)
+    
+    return dist12 <= 5.0 && dist13 <= 5.0 && dist23 <= 5.0
+  }
+
+  // Calculate center point of three landmarks
+  const calculateCenter = (landmarks: Array<{ x: number; y: number; z: number; id: string }>): { x: number; y: number; z: number } => {
+    const avgX = landmarks.reduce((sum, p) => sum + p.x, 0) / landmarks.length
+    const avgY = landmarks.reduce((sum, p) => sum + p.y, 0) / landmarks.length
+    const avgZ = landmarks.reduce((sum, p) => sum + p.z, 0) / landmarks.length
+    return { x: avgX, y: avgY, z: avgZ }
+  }
+
+  // Group landmarks into scanbodies based on proximity (5mm rule)
+  const detectScanbodies = (landmarks: Array<{ x: number; y: number; z: number; id: string }>): Array<Scanbody> => {
+    const scanbodies: Array<Scanbody> = []
+    const usedLandmarks = new Set<string>()
+    
+    for (let i = 0; i < landmarks.length - 2; i++) {
+      if (usedLandmarks.has(landmarks[i].id)) continue
+      
+      for (let j = i + 1; j < landmarks.length - 1; j++) {
+        if (usedLandmarks.has(landmarks[j].id)) continue
+        
+        for (let k = j + 1; k < landmarks.length; k++) {
+          if (usedLandmarks.has(landmarks[k].id)) continue
+          
+          const candidateGroup = [landmarks[i], landmarks[j], landmarks[k]]
+          
+          if (isValidScanbody(candidateGroup)) {
+            const scanbodyId = `scanbody_${Date.now()}_${i}_${j}_${k}`
+            scanbodies.push({
+              id: scanbodyId,
+              landmarks: candidateGroup
+            })
+            
+            // Mark these landmarks as used
+            candidateGroup.forEach(landmark => usedLandmarks.add(landmark.id))
+            break
+          }
+        }
+        if (usedLandmarks.has(landmarks[i].id)) break
+      }
+    }
+    
+    return scanbodies
+  }
+
+  // Create bounding box for a scanbody
+  const createBoundingBox = (scanbody: Scanbody) => {
+    const { vtkCubeSource, vtkActor, vtkMapper } = vtkModulesRef.current
+    const { renderer, renderWindow, boundingBoxActors } = vtkObjectsRef.current
+
+    if (!vtkCubeSource || !vtkActor || !vtkMapper || !renderer || !renderWindow) return
+
+    const center = calculateCenter(scanbody.landmarks)
+    const boundingBoxSize = 5.0 // 5mm bounding box
+
+    // Create cube source
+    const cubeSource = vtkCubeSource.newInstance({
+      xLength: boundingBoxSize,
+      yLength: boundingBoxSize,
+      zLength: boundingBoxSize
+    })
+
+    const cubeMapper = vtkMapper.newInstance()
+    cubeMapper.setInputConnection(cubeSource.getOutputPort())
+
+    const cubeActor = vtkActor.newInstance()
+    cubeActor.setMapper(cubeMapper)
+
+    // Set bounding box properties (wireframe, semi-transparent)
+    const property = cubeActor.getProperty()
+    property.setColor(1.0, 1.0, 0.0) // Yellow color
+    property.setOpacity(0.3)
+    property.setRepresentationToWireframe()
+    property.setLineWidth(2)
+
+    // Position the bounding box at the center of the landmarks
+    cubeActor.setPosition(center.x, center.y, center.z)
+
+    renderer.addActor(cubeActor)
+    boundingBoxActors.push(cubeActor)
+    renderWindow.render()
+
+    // Update scanbody with bounding box info
+    scanbody.boundingBox = {
+      center,
+      size: boundingBoxSize,
+      actor: cubeActor
+    }
+  }
+
+  // Process scanbodies - main function to be called from process button
+  const processScanbodies = () => {
+    if (landmarkPoints.length < 3) {
+      alert("Need at least 3 landmarks to create scanbodies")
+      return
+    }
+
+    // Clear existing bounding boxes
+    clearBoundingBoxes()
+
+    // Detect scanbodies from current landmarks
+    const detectedScanbodies = detectScanbodies(landmarkPoints)
+    
+    if (detectedScanbodies.length === 0) {
+      alert("No valid scanbodies found. Each scanbody needs exactly 3 landmarks with all distances ≤ 5mm.")
+      return
+    }
+
+    // Create bounding boxes for each detected scanbody
+    detectedScanbodies.forEach(scanbody => {
+      createBoundingBox(scanbody)
+    })
+
+    setScanbodies(detectedScanbodies)
+    
+    console.log(`Created ${detectedScanbodies.length} scanbody bounding boxes`)
+    alert(`Successfully created ${detectedScanbodies.length} scanbody bounding box${detectedScanbodies.length !== 1 ? 'es' : ''}`)
+  }
+
+  // Clear all bounding boxes
+  const clearBoundingBoxes = () => {
+    const { renderer, renderWindow, boundingBoxActors } = vtkObjectsRef.current
+    
+    if (boundingBoxActors && renderer && renderWindow) {
+      boundingBoxActors.forEach((actor: any) => renderer.removeActor(actor))
+      vtkObjectsRef.current.boundingBoxActors = []
+      renderWindow.render()
+      setScanbodies([])
+    }
+  }
 
   // Create medical-grade landmark
   const createMedicalLandmark = (landmark: { x: number; y: number; z: number; id: string }) => {
@@ -471,6 +636,9 @@ export const VTKViewer = React.forwardRef<VTKViewerRef, VTKViewerProps>(({
       renderWindow.render()
       setLandmarkPoints([])
       onLandmarksChange?.([])
+      
+      // Also clear bounding boxes when clearing landmarks
+      clearBoundingBoxes()
     }
   }
 
@@ -548,7 +716,10 @@ export const VTKViewer = React.forwardRef<VTKViewerRef, VTKViewerProps>(({
     highlightLandmark,
     deleteLandmark,
     getLandmarks: () => landmarkPoints,
-    changeModelColor
+    changeModelColor,
+    processScanbodies,
+    clearBoundingBoxes,
+    getScanbodies: () => scanbodies
   }))
 
   return (
@@ -698,4 +869,7 @@ export type VTKViewerRef = {
   deleteLandmark: (landmarkId: string) => void
   getLandmarks: () => Array<{ x: number; y: number; z: number; id: string }>
   changeModelColor: (newColor: string) => void
+  processScanbodies: () => void
+  clearBoundingBoxes: () => void
+  getScanbodies: () => Array<Scanbody>
 }

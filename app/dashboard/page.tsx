@@ -66,8 +66,16 @@ function DashboardContent() {
   // Handle process
   const handleProcess = () => {
     console.log("Process button clicked")
-    // Add your processing logic here
-    alert("Process functionality - implement your processing logic here")
+    if (!fileName) {
+      alert("Please load an STL file first")
+      return
+    }
+    if (landmarks.length < 3) {
+      alert("Please place at least 3 landmarks first")
+      return
+    }
+    // Process scanbodies - create bounding boxes for each scanbody
+    vtkViewerRef.current?.processScanbodies()
   }
 
   // Handle export STL  
