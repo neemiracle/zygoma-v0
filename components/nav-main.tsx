@@ -21,6 +21,7 @@ import {
 export function NavMain({
   items,
   onImportSTL,
+  onProcess,
   onExportSTL,
   onLibraryOpen,
   onViewSettingsOpen,
@@ -37,6 +38,7 @@ export function NavMain({
     }[]
   }[]
   onImportSTL?: () => void
+  onProcess?: () => void
   onExportSTL?: () => void
   onLibraryOpen?: () => void
   onViewSettingsOpen?: () => void
@@ -44,6 +46,8 @@ export function NavMain({
   const handleItemClick = (item: typeof items[0]) => {
     if (item.action === "import") {
       onImportSTL?.()
+    } else if (item.action === "process") {
+      onProcess?.()
     } else if (item.action === "export") {
       onExportSTL?.()
     } else if (item.action === "library") {

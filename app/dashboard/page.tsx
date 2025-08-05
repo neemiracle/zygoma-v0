@@ -63,6 +63,13 @@ function DashboardContent() {
     vtkViewerRef.current?.importSTL()
   }
 
+  // Handle process
+  const handleProcess = () => {
+    console.log("Process button clicked")
+    // Add your processing logic here
+    alert("Process functionality - implement your processing logic here")
+  }
+
   // Handle export STL  
   const handleExportSTL = () => {
     vtkViewerRef.current?.exportSTL()
@@ -190,6 +197,7 @@ function DashboardContent() {
     <>
       <AppSidebar 
         onImportSTL={handleImportSTL}
+        onProcess={handleProcess}
         onExportSTL={handleExportSTL}
         onLibraryOpen={handleLibraryOpen}
         onViewSettingsOpen={handleViewSettingsOpen}

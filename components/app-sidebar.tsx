@@ -6,6 +6,7 @@ import {
   Download,
   GalleryVerticalEnd,
   Library,
+  Play,
 } from "lucide-react"
 
 import { NavMain } from "@/components/nav-main"
@@ -40,6 +41,12 @@ const data = {
       action: "import"
     },
     {
+      title: "Process",
+      url: "#process",
+      icon: Play,
+      action: "process"
+    },
+    {
       title: "Library",
       url: "#library",
       icon: Library,
@@ -69,6 +76,7 @@ interface Landmark {
 
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
   onImportSTL?: () => void
+  onProcess?: () => void
   onExportSTL?: () => void
   onLibraryOpen?: () => void
   onViewSettingsOpen?: () => void
@@ -93,7 +101,8 @@ function CompanyLogo({ company }: { company: typeof data.company }) {
 }
 
 export function AppSidebar({ 
-  onImportSTL, 
+  onImportSTL,
+  onProcess, 
   onExportSTL, 
   onLibraryOpen, 
   onViewSettingsOpen,
@@ -112,6 +121,7 @@ export function AppSidebar({
         <NavMain 
           items={data.navMain} 
           onImportSTL={onImportSTL}
+          onProcess={onProcess}
           onExportSTL={onExportSTL}
           onLibraryOpen={onLibraryOpen}
           onViewSettingsOpen={onViewSettingsOpen}
