@@ -22,6 +22,7 @@ export function NavMain({
   items,
   onImportSTL,
   onProcess,
+  onProcess2,
   onExportSTL,
   onLibraryOpen,
   onViewSettingsOpen,
@@ -32,6 +33,7 @@ export function NavMain({
     icon?: LucideIcon
     isActive?: boolean
     action?: string
+    className?: string
     items?: {
       title: string
       url: string
@@ -39,6 +41,7 @@ export function NavMain({
   }[]
   onImportSTL?: () => void
   onProcess?: () => void
+  onProcess2?: () => void
   onExportSTL?: () => void
   onLibraryOpen?: () => void
   onViewSettingsOpen?: () => void
@@ -48,6 +51,8 @@ export function NavMain({
       onImportSTL?.()
     } else if (item.action === "process") {
       onProcess?.()
+    } else if (item.action === "process2") {
+      onProcess2?.()
     } else if (item.action === "export") {
       onExportSTL?.()
     } else if (item.action === "library") {
@@ -69,6 +74,7 @@ export function NavMain({
                 <SidebarMenuButton 
                   tooltip={item.title}
                   onClick={() => handleItemClick(item)}
+                  className={item.className}
                 >
                   {item.icon && <item.icon />}
                   <span>{item.title}</span>

@@ -64,7 +64,7 @@ function DashboardContent() {
   }
 
   // Handle process
-  const handleProcess = () => {
+  const handleProcess = async () => {
     console.log("Process button clicked")
     if (!fileName) {
       alert("Please load an STL file first")
@@ -74,8 +74,31 @@ function DashboardContent() {
       alert("Please place at least 3 landmarks first")
       return
     }
-    // Process scanbodies - create bounding boxes for each scanbody
-    vtkViewerRef.current?.processScanbodies()
+    // Process scanbodies - create bounding boxes and perform basic surface registration
+    try {
+      await vtkViewerRef.current?.processScanbodies()
+    } catch (error) {
+      console.error("Process failed:", error)
+    }
+  }
+
+  // Handle Process2 - Advanced Surface Matching
+  const handleProcess2 = async () => {
+    console.log("Process2 button clicked - Advanced Surface Matching")
+    if (!fileName) {
+      alert("Please load an STL file first")
+      return
+    }
+    if (landmarks.length < 3) {
+      alert("Please place at least 3 landmarks first")
+      return
+    }
+    // Advanced surface-to-surface matching registration
+    try {
+      await vtkViewerRef.current?.performAdvancedSurfaceMatching()
+    } catch (error) {
+      console.error("Advanced surface matching failed:", error)
+    }
   }
 
   // Handle export STL  
@@ -206,6 +229,7 @@ function DashboardContent() {
       <AppSidebar 
         onImportSTL={handleImportSTL}
         onProcess={handleProcess}
+        onProcess2={handleProcess2}
         onExportSTL={handleExportSTL}
         onLibraryOpen={handleLibraryOpen}
         onViewSettingsOpen={handleViewSettingsOpen}

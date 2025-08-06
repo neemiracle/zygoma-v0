@@ -47,6 +47,13 @@ const data = {
       action: "process"
     },
     {
+      title: "Process2",
+      url: "#process2",
+      icon: Play,
+      action: "process2",
+      // className: "bg-blue-600 hover:bg-blue-700 text-white"
+    },
+    {
       title: "Library",
       url: "#library",
       icon: Library,
@@ -77,6 +84,7 @@ interface Landmark {
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
   onImportSTL?: () => void
   onProcess?: () => void
+  onProcess2?: () => void
   onExportSTL?: () => void
   onLibraryOpen?: () => void
   onViewSettingsOpen?: () => void
@@ -102,7 +110,8 @@ function CompanyLogo({ company }: { company: typeof data.company }) {
 
 export function AppSidebar({ 
   onImportSTL,
-  onProcess, 
+  onProcess,
+  onProcess2, 
   onExportSTL, 
   onLibraryOpen, 
   onViewSettingsOpen,
@@ -122,6 +131,7 @@ export function AppSidebar({
           items={data.navMain} 
           onImportSTL={onImportSTL}
           onProcess={onProcess}
+          onProcess2={onProcess2}
           onExportSTL={onExportSTL}
           onLibraryOpen={onLibraryOpen}
           onViewSettingsOpen={onViewSettingsOpen}
